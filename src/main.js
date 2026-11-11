@@ -44,7 +44,7 @@ controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05);boardAmbient.layers.set(0);scene.add(boardAmbient);
 const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.16);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
-sunLight.position.set(0,4.25,50);sunLight.castShadow=false;sunLight.layers.set(1);
+sunLight.position.set(19.5,4.25,30);sunLight.castShadow=false;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
 sunLight.shadow.camera.left=-19;sunLight.shadow.camera.right=19;sunLight.shadow.camera.top=19;sunLight.shadow.camera.bottom=-19;
 sunLight.shadow.bias=-.0003;scene.add(sunLight);scene.add(sunLight.target);
@@ -255,10 +255,10 @@ const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
  if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.needsUpdate=true;}
 });sunTexture.colorSpace=THREE.SRGBColorSpace;
 sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissive:0xffd08a,emissiveIntensity:1.9,roughness:1,metalness:0,toneMapped:false});
-const sunBall=addMesh(new THREE.SphereGeometry(2.3,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',24.4,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',14.4,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
-sunGroup.position.set(0,4.25,50);
+const sunBall=addMesh(new THREE.SphereGeometry(2,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',21.2,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',12.5,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
+sunGroup.position.set(19.5,4.25,30);
 
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
