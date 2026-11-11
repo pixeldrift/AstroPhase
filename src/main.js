@@ -187,9 +187,9 @@ const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInne
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
-const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:4.2,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',10.8,.72);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,214,150,COLOR)',6.4,.62);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
+const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:8,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',12.2,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',7.2,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(0,4.25,20);
 
 // Celestial-only screen-space post effect. The board itself is never bloomed.
@@ -224,8 +224,8 @@ function renderCelestialPostFX(){
   const sun=kind==='sun',radius=sun?Math.min(width,height)*.24:Math.min(width,height)*.19;
   fxContext.save();fxContext.globalCompositeOperation='screen';
   if(sun){
-   drawRadialHaze(point.x,point.y,radius,[[0,'rgba(255,237,190,.30)'],[.12,'rgba(255,178,91,.22)'],[.42,'rgba(255,125,55,.075)'],[1,'rgba(255,105,45,0)']]);
-   drawRadialHaze(point.x,point.y,radius*.43,[[0,'rgba(255,250,220,.28)'],[.3,'rgba(255,213,145,.14)'],[1,'rgba(255,170,90,0)']]);
+   drawRadialHaze(point.x,point.y,radius,[[0,'rgba(255,245,215,.46)'],[.12,'rgba(255,190,112,.32)'],[.42,'rgba(255,135,65,.12)'],[1,'rgba(255,105,45,0)']]);
+   drawRadialHaze(point.x,point.y,radius*.43,[[0,'rgba(255,255,235,.42)'],[.3,'rgba(255,225,165,.22)'],[1,'rgba(255,170,90,0)']]);
   }else{
    drawRadialHaze(point.x,point.y,radius,[[0,'rgba(210,224,255,.20)'],[.2,'rgba(151,180,255,.12)'],[.55,'rgba(117,150,255,.045)'],[1,'rgba(117,150,255,0)']]);
   }
@@ -245,9 +245,11 @@ function renderCelestialPostFX(){
  };
  drawBody(sunPoint,'sun');
  // The screen-space sun haze must not wash over the moon's rendered surface.
- const moonEdge=fxMoonEdge.copy(moon.position).add(new THREE.Vector3(2.7,0,0)).project(camera);
- const moonRadius=Math.hypot((moonEdge.x-fxMoonPosition.x)*.5*width,(moonEdge.y-fxMoonPosition.y)*.5*height);
- fxContext.save();fxContext.globalCompositeOperation='destination-out';fxContext.beginPath();fxContext.arc(moonPoint.x,moonPoint.y,Math.max(0,moonRadius+3),0,Math.PI*2);fxContext.fill();fxContext.restore();
+ if(moonPoint.visible){
+  const moonEdge=fxMoonEdge.copy(moon.position).add(new THREE.Vector3(2.7,0,0)).project(camera);
+  const moonRadius=Math.hypot((moonEdge.x-fxMoonPosition.x)*.5*width,(moonEdge.y-fxMoonPosition.y)*.5*height);
+  fxContext.save();fxContext.globalCompositeOperation='destination-out';fxContext.beginPath();fxContext.arc(moonPoint.x,moonPoint.y,Math.max(0,moonRadius+3),0,Math.PI*2);fxContext.fill();fxContext.restore();
+ }
  drawBody(moonPoint,'moon');
 }
 resizeCelestialPostFX();
