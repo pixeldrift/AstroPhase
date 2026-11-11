@@ -144,15 +144,15 @@ function makeRocket(color){
  const body=addMesh(new THREE.CylinderGeometry(.2,.25,.88,18),bodyMat,g);body.position.y=.58;
  const nose=addMesh(new THREE.ConeGeometry(.205,.48,18),bodyMat,g);nose.position.y=1.26;
  const finMat=new THREE.MeshStandardMaterial({color,metalness:.38,roughness:.34});
- for(let j=0;j<3;j++){const angle=j*Math.PI*2/3,fin=addMesh(new THREE.BoxGeometry(.12,.43,.34),finMat,g);fin.position.set(Math.cos(angle)*.22,.31,Math.sin(angle)*.22);fin.rotation.y=angle;}
+ for(let j=0;j<3;j++){const angle=j*Math.PI*2/3,fin=addMesh(new THREE.BoxGeometry(.12,.32,.34),finMat,g);fin.position.set(Math.cos(angle)*.22,.31,Math.sin(angle)*.22);fin.rotation.y=angle;}
  const window=addMesh(new THREE.SphereGeometry(.105,18,14),new THREE.MeshStandardMaterial({color:0x9ceaff,metalness:.58,roughness:.16,emissive:0x245b78,emissiveIntensity:.7}),g);window.position.set(0,.77,.205);
- const flame=addMesh(new THREE.ConeGeometry(.12,.38,14),new THREE.MeshBasicMaterial({color:0xffa45e}),g);flame.rotation.z=Math.PI;flame.position.y=.05;g.userData.flame=flame;return g;
+ const flame=addMesh(new THREE.ConeGeometry(.12,.38,14),new THREE.MeshBasicMaterial({color:0xffa45e}),g);flame.rotation.z=Math.PI;flame.position.y=.05;flame.visible=false;g.userData.flame=flame;return g;
 }
 const rocketMeshes=PLAYERS.map(p=>{const r=makeRocket(p.color);scene.add(r);return r});
 function placeRockets(){
  PLAYERS.forEach((p,i)=>{
   const a=(p.position/32)*Math.PI*2-Math.PI/2,r=10.78+(i-1.5)*.43;
-  const mesh=rocketMeshes[i];mesh.position.set(Math.cos(a)*r,.16,Math.sin(a)*r);mesh.rotation.y=-a;
+  const mesh=rocketMeshes[i];mesh.position.set(Math.cos(a)*r,-.02,Math.sin(a)*r);mesh.rotation.y=-a;
  });
 }
 placeRockets();
