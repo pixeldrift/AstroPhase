@@ -210,8 +210,6 @@ function drawRadialHaze(x,y,radius,stops){
  stops.forEach(([at,color])=>g.addColorStop(at,color));
  fxContext.fillStyle=g;fxContext.beginPath();fxContext.arc(x,y,radius,0,Math.PI*2);fxContext.fill();
 }
-function moonPointNdcX(point){return (point.x/sceneRoot.clientWidth)*2-1}
-function moonPointNdcY(point){return 1-(point.y/sceneRoot.clientHeight)*2}
 function renderCelestialPostFX(){
  const width=sceneRoot.clientWidth,height=sceneRoot.clientHeight;
  if(!width||!height)return;
@@ -248,7 +246,7 @@ function renderCelestialPostFX(){
  drawBody(sunPoint,'sun');
  // The screen-space sun haze must not wash over the moon's rendered surface.
  const moonEdge=fxMoonEdge.copy(moon.position).add(new THREE.Vector3(2.7,0,0)).project(camera);
- const moonRadius=Math.hypot((moonEdge.x-moonPointNdcX(moon))/2*width,(moonEdge.y-moonPointNdcY(moon))/2*height);
+ const moonRadius=Math.hypot((moonEdge.x-fxMoonPosition.x)*.5*width,(moonEdge.y-fxMoonPosition.y)*.5*height);
  fxContext.save();fxContext.globalCompositeOperation='destination-out';fxContext.beginPath();fxContext.arc(moonPoint.x,moonPoint.y,Math.max(0,moonRadius+3),0,Math.PI*2);fxContext.fill();fxContext.restore();
  drawBody(moonPoint,'moon');
 }
