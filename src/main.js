@@ -129,9 +129,9 @@ function makeFlatText(text,color='#dce4ff'){
  // A few closely spaced underlayers create a restrained raised/extruded edge.
  for(let layer=0;layer<3;layer++){
   const backing=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,color:0x85819f,side:THREE.DoubleSide}));
-  backing.position.y=layer*.012;group.add(backing);
+  backing.position.z=layer*.012;group.add(backing);
  }
- const face=new THREE.Mesh(geometry,material);face.position.y=.038;group.add(face);
+ const face=new THREE.Mesh(geometry,material);face.position.z=.038;group.add(face);
  return group;
 }
 for(let i=0;i<8;i++){
