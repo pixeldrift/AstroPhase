@@ -118,20 +118,26 @@ for(let i=0;i<32;i++){
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
 function makeFlatText(text,color='#dce4ff'){
- const c=document.createElement('canvas');c.width=640;c.height=224;const ctx=c.getContext('2d');
- ctx.clearRect(0,0,c.width,c.height);
- const words=text.split(/\\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')];
- ctx.font='700 76px "DM Sans",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=9;
- rows.forEach((line,index)=>ctx.fillText(line,320,index===0?70:158,610));
- const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;
- const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
- const group=new THREE.Group(),geometry=new THREE.PlaneGeometry(2.85,.98);
- // A few closely spaced underlayers create a restrained raised/extruded edge.
- for(let layer=0;layer<3;layer++){
-  const backing=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,color:0x85819f,side:THREE.DoubleSide}));
-  backing.position.z=layer*.012;group.add(backing);
- }
- const face=new THREE.Mesh(geometry,material);face.position.z=.038;group.add(face);
+ const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
+ const group=new THREE.Group(),radius=6.5,lineHeight=.29,fontSize=74;
+ rows.forEach((line,row)=>{
+  const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
+  mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
+  const widths=[...line].map(ch=>Math.max(10,mctx.measureText(ch).width)),total=widths.reduce((a,b)=>a+b,0),scale=Math.min(1,2.95/total);
+  let cursor=-total*scale/2;
+  [...line].forEach((ch,index)=>{
+   const w=widths[index]*scale,canvas=document.createElement('canvas');canvas.width=128;canvas.height=144;
+   const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.fillText(ch,64,72);
+   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+   const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(.045,w),.30),mat);
+   const center=cursor+w/2,angle=center/radius;
+   glyph.position.set(radius*Math.sin(angle),(rows.length-1-row)*lineHeight,-radius*(1-Math.cos(angle)));
+   glyph.rotation.y=-angle;
+   glyph.position.z+=.012;group.add(glyph);cursor+=w;
+  });
+ });
  return group;
 }
 for(let i=0;i<8;i++){
@@ -162,7 +168,7 @@ for(let i=0;i<8;i++){
  token.rotation.x=-Math.PI/2;token.position.set(0,.39,0);token.receiveShadow=false;token.castShadow=false;tokenGroup.add(token);
  const icon=new THREE.Mesh(new THREE.PlaneGeometry(1.02,1.02),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
- const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.rotation.x=-Math.PI/2;label.position.set(0,.49,.94);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
+ const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.rotation.x=-Math.PI/2;label.position.set(0,.415,.94);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.5,.29,Math.sin(a)*6.5);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
@@ -171,7 +177,7 @@ torus(5.05,.07,0x9b8ed5,.37);
 const textureLoader=new THREE.TextureLoader();
 const moonAlbedo=textureLoader.load('/textures/moon-albedo.jpg');moonAlbedo.colorSpace=THREE.SRGBColorSpace;
 const moonGeometry=new THREE.SphereGeometry(2.7,160,112);
-const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x8b91a8),emissiveIntensity:.045,roughness:.96,metalness:0});
+const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x737b96),emissiveIntensity:.025,roughness:.96,metalness:0});
 const moon=addMesh(moonGeometry,moonMat);moon.position.set(0,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
 moon.layers.set(1);camera.layers.enable(1);
 sunLight.target.position.copy(moon.position);
@@ -206,7 +212,7 @@ const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInne
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
-const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:1.05,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
+const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:2.4,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
 const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',12.2,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
 const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',7.2,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(0,4.25,20);
