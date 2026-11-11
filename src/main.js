@@ -29,18 +29,18 @@ renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.28;
+renderer.toneMappingExposure=1.12;
 sceneRoot.appendChild(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=18;controls.maxDistance=58;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
-scene.add(new THREE.HemisphereLight(0x9eb8ed,0x171322,1.15));
+scene.add(new THREE.HemisphereLight(0x9eb8ed,0x171322,1.28));
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(0,4.25,20);sunLight.castShadow=false;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
 sunLight.shadow.camera.left=-19;sunLight.shadow.camera.right=19;sunLight.shadow.camera.top=19;sunLight.shadow.camera.bottom=-19;
 sunLight.shadow.bias=-.0003;scene.add(sunLight);scene.add(sunLight.target);
-const fillLight=new THREE.PointLight(0x536da9,30,45);fillLight.position.set(12,9,12);scene.add(fillLight);
+const fillLight=new THREE.PointLight(0x536da9,38,45);fillLight.position.set(12,9,12);scene.add(fillLight);
 
 // Star field is supplied as an equirectangular background texture.
 
@@ -78,7 +78,7 @@ for(let i=0;i<32;i++){
  const phaseCenter=-Math.PI/2+(phaseIndex/8)*Math.PI*2;
  const groupStart=-(sectorAngle-phaseGap)/2;
  const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
- const half=tileSpan/2,inner=9.05,outer=12.5;
+ const half=tileSpan/2,inner=9.05,outer=11.7;
  const shape=new THREE.Shape();
  shape.moveTo(Math.cos(a-half)*inner,Math.sin(a-half)*inner);
  shape.lineTo(Math.cos(a-half)*outer,Math.sin(a-half)*outer);
@@ -90,7 +90,7 @@ for(let i=0;i<32;i++){
  const tile=addMesh(geo,new THREE.MeshStandardMaterial({color:tileMaterials[slotInPhase],metalness:.32,roughness:.52,side:THREE.DoubleSide}),board);
  tile.position.y=.38;tile.userData.index=i;tile.userData.phaseIndex=phaseIndex;trackTiles.push(tile);
  const num=makeLabel(String(i+1),'#c3cde6',48);
- num.position.set(Math.cos(a)*10.8,.59,Math.sin(a)*10.8);num.scale.set(.62,.26,1);board.add(num);
+ num.position.set(Math.cos(a)*10.35,.59,Math.sin(a)*10.35);num.scale.set(.62,.26,1);board.add(num);
 }
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
@@ -172,10 +172,65 @@ const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInne
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
-const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:1.9,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',8.6,.48);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,214,150,COLOR)',5.2,.38);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
+const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:4.2,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',10.8,.72);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,214,150,COLOR)',6.4,.62);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(0,4.25,20);
+
+// Celestial-only screen-space post effect. The board itself is never bloomed.
+const celestialFx=document.createElement('canvas');
+celestialFx.className='celestial-postfx';
+celestialFx.setAttribute('aria-hidden','true');
+sceneRoot.appendChild(celestialFx);
+const fxContext=celestialFx.getContext('2d');
+const fxMoonPosition=new THREE.Vector3(),fxSunPosition=new THREE.Vector3();
+function resizeCelestialPostFX(){
+ const width=sceneRoot.clientWidth,height=sceneRoot.clientHeight,dpr=Math.min(devicePixelRatio,2);
+ celestialFx.width=Math.round(width*dpr);celestialFx.height=Math.round(height*dpr);
+ celestialFx.style.width=width+'px';celestialFx.style.height=height+'px';
+ fxContext.setTransform(dpr,0,0,dpr,0,0);
+}
+function drawRadialHaze(x,y,radius,stops){
+ const g=fxContext.createRadialGradient(x,y,0,x,y,radius);
+ stops.forEach(([at,color])=>g.addColorStop(at,color));
+ fxContext.fillStyle=g;fxContext.beginPath();fxContext.arc(x,y,radius,0,Math.PI*2);fxContext.fill();
+}
+function renderCelestialPostFX(){
+ const width=sceneRoot.clientWidth,height=sceneRoot.clientHeight;
+ if(!width||!height)return;
+ fxContext.clearRect(0,0,width,height);
+ const project=(object,target)=>{
+  target.copy(object.position).setFromMatrixPosition(object.matrixWorld).project(camera);
+  return {x:(target.x*.5+.5)*width,y:(-.5*target.y+.5)*height,z:target.z,visible:target.z>-1&&target.z<1};
+ };
+ const moonPoint=project(moon,fxMoonPosition),sunPoint=project(sunGroup,fxSunPosition);
+ const drawBody=(point,kind)=>{
+  if(!point.visible)return;
+  const sun=kind==='sun',radius=sun?Math.min(width,height)*.24:Math.min(width,height)*.19;
+  fxContext.save();fxContext.globalCompositeOperation='screen';
+  if(sun){
+   drawRadialHaze(point.x,point.y,radius,[[0,'rgba(255,237,190,.30)'],[.12,'rgba(255,178,91,.22)'],[.42,'rgba(255,125,55,.075)'],[1,'rgba(255,105,45,0)']]);
+   drawRadialHaze(point.x,point.y,radius*.43,[[0,'rgba(255,250,220,.28)'],[.3,'rgba(255,213,145,.14)'],[1,'rgba(255,170,90,0)']]);
+  }else{
+   drawRadialHaze(point.x,point.y,radius,[[0,'rgba(210,224,255,.20)'],[.2,'rgba(151,180,255,.12)'],[.55,'rgba(117,150,255,.045)'],[1,'rgba(117,150,255,0)']]);
+  }
+  // Restrained anamorphic flare: one soft streak and a few faint optical ghosts.
+  const flareColor=sun?'255,211,151':'190,208,255';
+  const streak=fxContext.createLinearGradient(point.x-radius*.48,point.y,point.x+radius*.48,point.y);
+  streak.addColorStop(0,'rgba('+flareColor+',0)');streak.addColorStop(.5,'rgba('+flareColor+','+(sun?.16:.07)+')');streak.addColorStop(1,'rgba('+flareColor+',0)');
+  fxContext.fillStyle=streak;fxContext.fillRect(point.x-radius*.48,point.y-(sun?1.2:.7),radius*.96,sun?2.4:1.4);
+  if(sun){
+   const centerX=width*.5,centerY=height*.5,dx=point.x-centerX,dy=point.y-centerY;
+   [.32,.58,.82].forEach((t,i)=>{
+    const x=centerX-dx*t,y=centerY-dy*t,r=radius*(.025+i*.009);
+    drawRadialHaze(x,y,r,[[0,'rgba(255,225,176,.12)'],[1,'rgba(255,195,130,0)']]);
+   });
+  }
+  fxContext.restore();
+ };
+ drawBody(moonPoint,'moon');drawBody(sunPoint,'sun');
+}
+resizeCelestialPostFX();
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
  const body=addMesh(new THREE.CylinderGeometry(.2,.25,.88,18),bodyMat,g);body.position.y=.58;
@@ -192,16 +247,16 @@ function placeRockets(){
   const phaseCenter=-Math.PI/2+(phaseIndex/8)*Math.PI*2;
   const groupStart=-(sectorAngle-phaseGap)/2;
   const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
-  const r=10.78+(i-1.5)*.43;
+  const r=10.0+(i-1.5)*.38;
   const mesh=rocketMeshes[i];mesh.position.set(Math.cos(a)*r,.43,Math.sin(a)*r);mesh.rotation.y=-a;
  });
 }
 placeRockets();
 function updateRocketPositions(){placeRockets()}
 const orbitDots=addMesh(new THREE.TorusGeometry(13.6,.025,6,160),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=-.2;
-function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}
+function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);resizeCelestialPostFX()}
 new ResizeObserver(resize).observe(sceneRoot);resize();
-function animate(){requestAnimationFrame(animate);controls.update();rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});renderer.render(scene,camera)}
+function animate(){requestAnimationFrame(animate);controls.update();rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});renderer.render(scene,camera);renderCelestialPostFX()}
 animate();
 
 document.querySelector('#view-top').addEventListener('click',()=>{camera.position.set(0,42,.01);controls.target.set(0,0,0);controls.update()});
