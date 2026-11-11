@@ -118,10 +118,21 @@ for(let i=0;i<32;i++){
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
 function makeFlatText(text,color='#dce4ff'){
- const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');
- ctx.clearRect(0,0,c.width,c.height);ctx.font='700 58px "DM Sans",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.fillText(text,256,48);
+ const c=document.createElement('canvas');c.width=640;c.height=224;const ctx=c.getContext('2d');
+ ctx.clearRect(0,0,c.width,c.height);
+ const words=text.split(/\\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')];
+ ctx.font='700 76px "DM Sans",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=9;
+ rows.forEach((line,index)=>ctx.fillText(line,320,index===0?70:158,610));
  const texture=new THREE.CanvasTexture(c);texture.colorSpace=THREE.SRGBColorSpace;
- return new THREE.Mesh(new THREE.PlaneGeometry(2.35,.44),new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+ const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+ const group=new THREE.Group(),geometry=new THREE.PlaneGeometry(2.85,.98);
+ // A few closely spaced underlayers create a restrained raised/extruded edge.
+ for(let layer=0;layer<3;layer++){
+  const backing=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,color:0x85819f,side:THREE.DoubleSide}));
+  backing.position.y=layer*.012;group.add(backing);
+ }
+ const face=new THREE.Mesh(geometry,material);face.position.y=.038;group.add(face);
+ return group;
 }
 for(let i=0;i<8;i++){
  const a=-Math.PI/2+(i/8)*Math.PI*2,half=(Math.PI/8)*.94,ri=5.45,ro=8.15;
@@ -151,7 +162,7 @@ for(let i=0;i<8;i++){
  token.rotation.x=-Math.PI/2;token.position.set(0,.39,0);token.receiveShadow=false;token.castShadow=false;tokenGroup.add(token);
  const icon=new THREE.Mesh(new THREE.PlaneGeometry(1.02,1.02),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
- const label=makeFlatText(PHASES[i].toUpperCase(),'#d4d2f0');label.rotation.x=-Math.PI/2;label.position.set(0,.405,.94);label.castShadow=false;label.receiveShadow=false;tokenGroup.add(label);
+ const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.rotation.x=-Math.PI/2;label.position.set(0,.49,.94);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.5,.29,Math.sin(a)*6.5);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
@@ -195,7 +206,7 @@ const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInne
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
-const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:2.4,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
+const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:1.05,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
 const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',12.2,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
 const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',7.2,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(0,4.25,20);
