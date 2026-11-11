@@ -121,7 +121,7 @@ const phaseMeshes=[];
 function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
  const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
  const group=new THREE.Group(),fontSize=74,letterHeight=.27;
- const boardY=.385,outerRadius=7.48,rowSpacing=.34;
+ const boardY=.43,outerRadius=7.48,rowSpacing=.34;
  rows.forEach((line,row)=>{
   const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
   mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
@@ -130,7 +130,7 @@ function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
   let cursor=-total*scale/2;
   chars.forEach((ch,index)=>{
    const advance=advances[index],angle=(cursor+advance*scale/2)/radius,theta=centerAngle+angle;
-   const canvas=document.createElement('canvas');canvas.width=Math.max(32,Math.ceil(metrics[index].width+12));canvas.height=fontSize+16;
+   const canvas=document.createElement('canvas');canvas.width=Math.max(32,Math.ceil(metrics[index].width+12));canvas.height=fontSize+40;
    const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='alphabetic';
    ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=5;
    // Mirror the glyph bitmap because its local horizontal axis runs opposite the reading direction.
