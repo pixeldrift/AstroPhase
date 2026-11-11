@@ -118,7 +118,7 @@ for(let i=0;i<32;i++){
 }
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
-function makeFlatText(text,color='#dce4ff'){
+function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
  const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
  const group=new THREE.Group(),fontSize=74,letterHeight=.27;
  const boardY=.355,outerRadius=7.48,rowSpacing=.34;
@@ -136,10 +136,10 @@ function makeFlatText(text,color='#dce4ff'){
    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
    const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
    const glyph=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(.045,w),letterHeight),mat);
-   const theta=angle-Math.PI/2,radial=new THREE.Vector3(Math.cos(theta),0,Math.sin(theta));
+   const theta=centerAngle+angle,radial=new THREE.Vector3(Math.cos(theta),0,Math.sin(theta));
    const tangent=new THREE.Vector3(-Math.sin(theta),0,Math.cos(theta));
    const normal=new THREE.Vector3(0,1,0),basis=new THREE.Matrix4().makeBasis(tangent,radial,normal);
-   glyph.position.set(radius*Math.cos(theta),boardY,radius*Math.sin(theta));
+   glyph.position.set(radius*Math.cos(theta),boardY+.017,radius*Math.sin(theta));
    glyph.quaternion.setFromRotationMatrix(basis);
    group.add(glyph);cursor+=w;
   });
@@ -174,7 +174,7 @@ for(let i=0;i<8;i++){
  token.rotation.x=-Math.PI/2;token.position.set(0,.39,0);token.receiveShadow=false;token.castShadow=false;tokenGroup.add(token);
  const icon=new THREE.Mesh(new THREE.PlaneGeometry(1.02,1.02),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
- const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});phaseGroup.add(label);
+ const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8',a);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});phaseGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
