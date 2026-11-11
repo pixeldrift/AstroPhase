@@ -118,33 +118,30 @@ for(let i=0;i<32;i++){
 }
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
-function makeFlatText(text,color='#dce4ff'){
+function makeFlatText(text,color='#ffffff'){
  const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
- const group=new THREE.Group(),radius=6.5,lineHeight=.29,fontSize=74,letterHeight=.30,canvasHeight=144;
+ const canvas=document.createElement('canvas');canvas.width=768;canvas.height=256;
+ const ctx=canvas.getContext('2d'),fontSize=72,centerX=canvas.width/2,maxWidth=620;
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
+ ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;
  rows.forEach((line,row)=>{
-  const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
-  mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
-  const chars=[...line],widths=chars.map(ch=>Math.max(10,mctx.measureText(ch).width));
-  const rowRadius=radius-row*lineHeight,total=widths.reduce((sum,width)=>sum+width+8,0)-8,scale=Math.min(1,2.95/total);
-  let cursor=-total*scale/2;
+  const chars=[...line],widths=chars.map(ch=>ctx.measureText(ch).width),total=widths.reduce((sum,width)=>sum+width,0);
+  const scale=Math.min(1,maxWidth/total),scaledWidths=widths.map(width=>width*scale),scaledTotal=scaledWidths.reduce((sum,width)=>sum+width,0);
+  const radius=row===0?1080:980,baseline=row===0?78:178;
+  let cursor=-scaledTotal/2;
   chars.forEach((ch,index)=>{
-   const advance=(widths[index]+8)*scale,center=cursor+(widths[index]*scale)/2;
-   const canvas=document.createElement('canvas');canvas.width=Math.max(24,Math.ceil(widths[index]+16));canvas.height=canvasHeight;
-   const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.fillText(ch,canvas.width/2,canvasHeight/2);
-   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
-   const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
-   // Match plane dimensions to the texture aspect ratio so glyphs stay proportional.
-   const glyphHeight=letterHeight*scale,glyphWidth=(canvas.width/canvasHeight)*letterHeight*scale;
-   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(glyphWidth,glyphHeight),mat);
-   const angle=center/rowRadius;
-   // Keep glyphs in one flat plane; curve only their baseline and rotate each letter in-plane.
-   glyph.position.set(rowRadius*Math.sin(angle),rowRadius*Math.cos(angle)-radius,0);
-   glyph.rotation.z=-angle;
-   group.add(glyph);cursor+=advance;
+   const width=scaledWidths[index],angle=(cursor+width/2)/radius;
+   const x=centerX+radius*Math.sin(angle),y=baseline+radius*(1-Math.cos(angle));
+   ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+   ctx.font=`700 ${fontSize*scale}px "DM Sans",sans-serif`;
+   ctx.fillText(ch,0,0);ctx.restore();cursor+=width;
   });
  });
- return group;
+ const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
+ const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+ const group=new THREE.Group(),plane=new THREE.Mesh(new THREE.PlaneGeometry(2.85,.95),material);
+ group.add(plane);return group;
 }
 for(let i=0;i<8;i++){
  const a=-Math.PI/2+(i/8)*Math.PI*2,half=(Math.PI/8)*.94,ri=5.45,ro=8.15;
