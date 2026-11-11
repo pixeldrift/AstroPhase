@@ -128,7 +128,7 @@ function makeFlatText(text,color='#ffffff'){
  rows.forEach((line,row)=>{
   const chars=[...line],widths=chars.map(ch=>ctx.measureText(ch).width),total=widths.reduce((sum,width)=>sum+width,0);
   const scale=Math.min(1,maxWidth/total),scaledWidths=widths.map(width=>width*scale),scaledTotal=scaledWidths.reduce((sum,width)=>sum+width,0);
-  const radius=row===0?1080:980,baseline=row===0?78:178;
+  const radius=row===0?1080:980,baseline=row===0?55:140;
   let cursor=-scaledTotal/2;
   chars.forEach((ch,index)=>{
    const width=scaledWidths[index],angle=(cursor+width/2)/radius;
