@@ -90,9 +90,32 @@ for(let i=0;i<8;i++){
  mesh.rotation.x=-Math.PI/2;mesh.position.y=.24;mesh.userData.phase=i;phaseMeshes.push(mesh);
  const label=makeLabel(PHASES[i].toUpperCase(),'#c5c4e7',34);const r=6.78;
  label.position.set(Math.cos(a)*r,.3,Math.sin(a)*r);label.scale.set(1.75,.42,1);phaseGroup.add(label);
- // Small visual moon icon, with a directional crescent highlight.
- const icon=addMesh(new THREE.SphereGeometry(.35,24,16),new THREE.MeshStandardMaterial({color:phaseColors[i],roughness:.8}),phaseGroup);
- icon.position.set(Math.cos(a)*5.85,.42,Math.sin(a)*5.85);
+ // A small, correctly oriented lunar-phase medallion.
+ const iconCanvas=document.createElement('canvas');iconCanvas.width=128;iconCanvas.height=128;
+ const ix=iconCanvas.getContext('2d');const cx=64,cy=64,rad=51;
+ ix.beginPath();ix.arc(cx,cy,rad,0,Math.PI*2);ix.fillStyle='#171c2d';ix.fill();
+ ix.save();ix.beginPath();ix.arc(cx,cy,rad,0,Math.PI*2);ix.clip();
+ ix.fillStyle='#e5dfce';ix.fillRect(cx-rad,cy-rad,rad*2,rad*2);
+ const waxing=i<4,illumination=i===0?0:i===4?1:(i<4?i/4:(8-i)/4);
+ ix.fillStyle='#171c2d';
+ if(i===0){ix.fillRect(cx-rad,cy-rad,rad*2,rad*2)}
+ else if(i===4){/* fully illuminated */}
+ else {
+  ix.beginPath();
+  const edge=Math.cos(illumination*Math.PI)*rad;
+  if(waxing){
+   ix.moveTo(cx,cy-rad);ix.arc(cx,cy,rad,-Math.PI/2,Math.PI/2,false);
+   ix.ellipse(cx,cy,Math.abs(edge),rad,0,Math.PI/2,-Math.PI/2,edge>0);
+  }else{
+   ix.moveTo(cx,cy-rad);ix.arc(cx,cy,rad,-Math.PI/2,Math.PI/2,true);
+   ix.ellipse(cx,cy,Math.abs(edge),rad,0,Math.PI/2,-Math.PI/2,edge<0);
+  }
+  ix.closePath();ix.fill();
+ }
+ ix.restore();ix.beginPath();ix.arc(cx,cy,rad,0,Math.PI*2);ix.strokeStyle='rgba(220,225,245,.55)';ix.lineWidth=3;ix.stroke();
+ const phaseTexture=new THREE.CanvasTexture(iconCanvas);phaseTexture.colorSpace=THREE.SRGBColorSpace;
+ const icon=addMesh(new THREE.PlaneGeometry(.72,.72),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide}),phaseGroup);
+ icon.rotation.x=-Math.PI/2;icon.position.set(Math.cos(a)*5.85,.43,Math.sin(a)*5.85);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
 torus(5.05,.07,0x9b8ed5,.37);
