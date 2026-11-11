@@ -211,11 +211,15 @@ const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInne
 
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
-const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
-const sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissive:0xffd08a,emissiveIntensity:1.9,roughness:1,metalness:0,toneMapped:false});
+let sunMaterial;
+const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
+ const image=loaded.image,canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
+ const ctx=canvas.getContext('2d');ctx.filter='brightness(1.18) contrast(.58)';ctx.drawImage(image,0,0);
+ const softenedTexture=new THREE.CanvasTexture(canvas);softenedTexture.colorSpace=THREE.SRGBColorSpace;
+ if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.needsUpdate=true;}
+});sunTexture.colorSpace=THREE.SRGBColorSpace;
+sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissive:0xffd08a,emissiveIntensity:1.9,roughness:1,metalness:0,toneMapped:false});
 const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
-sunTexture.onUpdate=()=>{};
-sunTexture.addEventListener?.('update',()=>{});
 const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',12.2,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
 const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',7.2,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(0,4.25,20);
