@@ -119,20 +119,21 @@ for(let i=0;i<32;i++){
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
 function makeFlatText(text,color='#ffffff'){
- const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
- const canvas=document.createElement('canvas');canvas.width=768;canvas.height=256;
- const ctx=canvas.getContext('2d'),fontSize=72,centerX=canvas.width/2,maxWidth=620;
+ const words=text.trim().split(/\\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
+ const canvas=document.createElement('canvas');canvas.width=768;canvas.height=320;
+ const ctx=canvas.getContext('2d'),fontSize=88,centerX=canvas.width/2,maxWidth=680;
  ctx.clearRect(0,0,canvas.width,canvas.height);
  ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=color;
+ const baselines=rows.length===1?[160]:[105,220];
  rows.forEach((line,row)=>{
   const chars=[...line],widths=chars.map(ch=>ctx.measureText(ch).width),total=widths.reduce((sum,width)=>sum+width,0);
   const scale=Math.min(1,maxWidth/total),scaledWidths=widths.map(width=>width*scale),scaledTotal=scaledWidths.reduce((sum,width)=>sum+width,0);
-  const radius=row===0?1080:980,baseline=row===0?55:140;
+  const radius=1000,baseline=baselines[row];
   let cursor=-scaledTotal/2;
   chars.forEach((ch,index)=>{
    const width=scaledWidths[index],angle=(cursor+width/2)/radius;
-   const x=centerX+radius*Math.sin(angle),y=baseline+radius*(1-Math.cos(angle));
+   const x=centerX+radius*Math.sin(angle),y=baseline-radius*(1-Math.cos(angle));
    ctx.save();ctx.translate(x,y);ctx.rotate(angle);
    ctx.font=`700 ${fontSize*scale}px "DM Sans",sans-serif`;
    ctx.fillText(ch,0,0);ctx.restore();cursor+=width;
@@ -140,7 +141,7 @@ function makeFlatText(text,color='#ffffff'){
  });
  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
  const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
- const group=new THREE.Group(),plane=new THREE.Mesh(new THREE.PlaneGeometry(2.85,.95),material);
+ const group=new THREE.Group(),plane=new THREE.Mesh(new THREE.PlaneGeometry(2.85,1.25),material);
  group.add(plane);return group;
 }
 for(let i=0;i<8;i++){
@@ -171,7 +172,7 @@ for(let i=0;i<8;i++){
  token.rotation.x=-Math.PI/2;token.position.set(0,.39,0);token.receiveShadow=false;token.castShadow=false;tokenGroup.add(token);
  const icon=new THREE.Mesh(new THREE.PlaneGeometry(1.02,1.02),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
- const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.rotation.x=-Math.PI/2;label.position.set(0,.415,.94);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
+ const label=makeFlatText(PHASES[i].toUpperCase(),'#ffffff');label.rotation.x=-Math.PI/2;label.position.set(0,.415,1.25);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
