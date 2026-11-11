@@ -188,7 +188,11 @@ function makeRocket(color){
 const rocketMeshes=PLAYERS.map(p=>{const r=makeRocket(p.color);scene.add(r);return r});
 function placeRockets(){
  PLAYERS.forEach((p,i)=>{
-  const a=-Math.PI/2-(p.position/32)*Math.PI*2,r=10.78+(i-1.5)*.43;
+  const phaseIndex=Math.floor(p.position/4),slotInPhase=p.position%4;
+  const phaseCenter=-Math.PI/2-(phaseIndex/8)*Math.PI*2;
+  const groupStart=-(sectorAngle-phaseGap)/2;
+  const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
+  const r=10.78+(i-1.5)*.43;
   const mesh=rocketMeshes[i];mesh.position.set(Math.cos(a)*r,.43,Math.sin(a)*r);mesh.rotation.y=-a;
  });
 }
