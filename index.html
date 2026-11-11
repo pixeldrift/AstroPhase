@@ -33,12 +33,14 @@
             <div class="pilot-row"><span class="pilot-avatar grape">✦</span><div class="pilot-info"><strong id="current-player">Grape</strong><span>Exploration crew</span></div><span class="active-tag">YOUR TURN</span></div>
             <div class="progress-label"><span>PHASE COLLECTION</span><strong id="phase-count">0 <i>/ 8</i></strong></div>
             <div class="phase-progress" id="phase-progress"></div>
-            <div class="collected-phases" id="collected-phases"><span class="empty-collection">Your lunar discoveries will appear here.</span></div>
+            <div class="collected-phases" id="collected-phases"><span class="empty-collection">Your lunar discoveries will appear here.</span></div><div class="parts-heading"><span>ROCKET COMPONENTS</span><strong id="parts-count">0 / 3</strong></div><div class="rocket-parts" id="rocket-parts"><span class="part-slot">EASY</span><span class="part-slot">MEDIUM</span><span class="part-slot">HARD</span></div>
           </div>
           <div class="launch-card">
             <div class="eyebrow">FLIGHT DECK</div>
-            <div class="flight-row"><div><div class="flight-title">Ready for launch?</div><div class="flight-subtitle">Roll the die to chart your course.</div></div><div class="die" id="die-face">✦</div></div>
-            <button class="launch-button" id="roll-button"><span>ROLL TO MOVE</span><span>↗</span></button>
+            <div class="flight-row"><div><div class="flight-title">Spin your course</div><div class="flight-subtitle">Let the rocket choose your path.</div></div><div class="boost-count" id="boost-count">BOOSTS 0</div></div>
+            <div class="spinner-wrap"><div class="spinner-wheel" id="spinner-wheel"><span class="spinner-label s0">1</span><span class="spinner-label s1">3</span><span class="spinner-label s2">5</span><span class="spinner-label s3">EVENT</span><span class="spinner-label s4">2</span><span class="spinner-label s5">4</span><span class="spinner-label s6">6</span><span class="spinner-label s7">EVENT</span><span class="spinner-center"></span></div><div class="spinner-rocket" id="spinner-rocket">🚀</div></div>
+            <button class="launch-button" id="roll-button"><span>SPIN TO MOVE</span><span>↗</span></button>
+            <button class="boost-button hidden" id="use-boost">USE SAVED ROCKET BOOST ↗</button>
             <div class="move-status" id="move-status">Your rocket is waiting at the launch point.</div>
           </div>
           <div class="crew-card">
@@ -58,6 +60,7 @@
           <button class="continue-button hidden" id="continue-button">CONTINUE FLIGHT <span>↗</span></button>
         </section>
       </div>
+      <div class="modal-backdrop hidden" id="event-modal"><section class="question-modal event-modal" role="dialog" aria-modal="true" aria-labelledby="event-title"><div class="modal-kicker">INCOMING EVENT CARD <span>MISSION ALERT</span></div><div class="event-icon" id="event-icon">✦</div><h2 id="event-title">Event title</h2><p class="event-description" id="event-description"></p><div class="event-actions" id="event-actions"></div></section></div>
       <div class="toast" id="toast" role="status"></div>
     </div>
     <script type="module" src="/src/main.js"></script>
