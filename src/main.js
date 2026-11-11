@@ -134,7 +134,7 @@ function makeFlatText(text,color='#ffffff'){
   chars.forEach((ch,index)=>{
    const width=scaledWidths[index],angle=(cursor+width/2)/radius;
    const x=centerX+radius*Math.sin(angle),y=baseline-radius*(1-Math.cos(angle));
-   ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+   ctx.save();ctx.translate(x,y);ctx.rotate(-angle);
    ctx.font=`700 ${fontSize*scale}px "DM Sans",sans-serif`;
    ctx.fillText(ch,0,0);ctx.restore();cursor+=width;
   });
