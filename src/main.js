@@ -279,7 +279,7 @@ function showEvent(event){
    action('KEEP YOUR POSITION',finish);break;
   case 'solar-eclipse':
    state.phaseBlocked=true;document.querySelector('#move-status').textContent='Solar Eclipse: phase collection is blocked this turn.';
-   action('CONTINUE',finish,true);break;
+   action('ANSWER A QUESTION',()=>showQuestion(),true);break;
   case 'oxygen-leak':{
    const p=PLAYERS[state.current];
    if(p.phases.length){const lost=p.phases[Math.floor(Math.random()*p.phases.length)];p.phases=p.phases.filter(x=>x!==lost);document.querySelector('#move-status').textContent='Oxygen Leak: lost '+PHASES[lost]+'.'}
