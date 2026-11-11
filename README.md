@@ -14,29 +14,30 @@ npm run dev
 - Adjustable 3D tabletop camera with orbit, pan and zoom controls
 - 32-space outer circuit and eight curved lunar-phase sectors
 - Textured Moon using the supplied lunar albedo and TIFF displacement maps
-- Lightly emissive near-side lunar surface; the Moon does not cast a shadow onto the board
-- Textured, emissive Sun with a soft glow, aligned with the directional sunlight
+- Textured Sun with bright emissive surface and soft Fresnel edge glow
+- Moon uses a dedicated directional light on its own Three.js layer, so the Sun illuminates the Moon without becoming the board's key light
+- Sun and Moon share the same vertical position, giving the lunar terminator a horizontal light direction (vertical day/night boundary)
+- Soft Fresnel halos plus Unreal Bloom post-processing for diffuse celestial glow
+- Independent hemisphere and fill lighting for the board and player pieces
+- Round, anti-aliased procedural stars (not square point sprites)
 - Four upright colored rocket pieces: Grape, Orange, Lime and Cherry
-- Eight-slot spinner in the order **1, 3, 5, Event, 2, 4, 6, Event**
-- Ten-card shuffled Event deck and pass-and-play question flow
-- Phase tokens face inward toward the Moon, with labels on the outer side of each token
-- Circular token geometry and disabled token shadow casting to avoid square plane shadows
-- Correct answers collect a phase and the rocket component matching question difficulty
-- Victory requires all eight lunar phases and all three rocket components (Easy, Medium, Hard)
+- Eight-slot spinner, event deck, pass-and-play questions and phase/component collection
 
 ## Art assets
 
-The supplied images are organized under `public/textures/`:
+The supplied celestial textures are in `public/textures/`:
 - `moon-albedo.jpg` — lunar surface color
 - `moon-displacement.tiff` — decoded at runtime to displace the Moon's sphere geometry
 - `sun-surface.jpg` — solar surface color
-- `rocket-reference.png` — visual reference only; the watermarked stock image is not rendered in-game
+- `rocket-reference.png` — visual reference only
 
-The TIFF decoder is provided by `utif`.
+The supplied `IMG_8403.jpeg` star field is installed as `public/textures/starfield.jpg` and used as the scene background without altering its brightness or appearance.
 
-## Event cards
+## Future visual direction
 
-Solar Flare, Crew Exchange, Solar Eclipse, Oxygen Leak, Rocket Boost, Bad Weather, Fuel Leak, Space Sick, Slingshot and Spacewalk.
+- Earth as a distant celestial body, positioned consistently with the Sun/Moon composition
+- Lens flare elements tied to camera visibility and screen-space alignment of the Sun, kept subtle and art-directed
+- Tune the star-field exposure in context only if play-testing shows it needs adjustment
 
 ## Question bank
 
@@ -46,4 +47,4 @@ The existing `quesrikns.csv` file is tab-delimited despite its extension. Keep i
 
 ## Prototype notes
 
-This is an early gameplay and visual prototype. Rocket components are currently represented as HUD inventory; physical assembly and the lift-off animation that sends phase tokens into the player's HUD remain future work. Run a browser build and play-test before merging.
+This is an early gameplay and visual prototype. Rocket components are currently represented as HUD inventory; physical assembly and the lift-off animation that sends phase tokens into the player's HUD remain future work. A browser build and visual check are still required before merging.
