@@ -125,23 +125,25 @@ function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
  rows.forEach((line,row)=>{
   const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
   mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
-  const chars=[...line],widths=chars.map(ch=>Math.max(10,mctx.measureText(ch).width)),total=widths.reduce((a,b)=>a+b,0),scale=Math.min(1,2.95/total);
-  const radius=outerRadius-row*rowSpacing;
+  const chars=[...line],metrics=chars.map(ch=>mctx.measureText(ch)),advances=metrics.map(m=>Math.max(8,m.width/fontSize*letterHeight));
+  const total=advances.reduce((a,b)=>a+b,0),scale=Math.min(1,2.95/total),radius=outerRadius-row*rowSpacing;
   let cursor=-total*scale/2;
   chars.forEach((ch,index)=>{
-   const w=widths[index]*scale,center=cursor+w/2,angle=center/radius;
-   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=144;
+   const advance=advances[index],angle=(cursor+advance*scale/2)/radius,theta=centerAngle+angle;
+   const canvas=document.createElement('canvas');canvas.width=Math.max(32,Math.ceil(metrics[index].width+12));canvas.height=fontSize+16;
    const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.fillText(ch,64,72);
+   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=5;ctx.fillText(ch,canvas.width/2,canvas.height/2);
    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
    const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
-   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(.045,w),letterHeight),mat);
-   const theta=centerAngle+angle,radial=new THREE.Vector3(Math.cos(theta),0,Math.sin(theta));
+   const glyphWidth=(canvas.width/canvas.height)*letterHeight*scale;
+   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(glyphWidth,letterHeight*scale),mat);
+   // Rigid glyphs: tangent-aligned, with the baseline on the outer edge and tops pointing inward.
    const tangent=new THREE.Vector3(-Math.sin(theta),0,Math.cos(theta));
-   const normal=new THREE.Vector3(0,1,0),basis=new THREE.Matrix4().makeBasis(tangent,radial,normal);
-   glyph.position.set(radius*Math.cos(theta),boardY+.017,radius*Math.sin(theta));
+   const inward=new THREE.Vector3(-Math.cos(theta),0,-Math.sin(theta));
+   const normal=new THREE.Vector3(0,1,0),basis=new THREE.Matrix4().makeBasis(tangent,inward,normal);
+   glyph.position.set(radius*Math.cos(theta),boardY+.012,radius*Math.sin(theta));
    glyph.quaternion.setFromRotationMatrix(basis);
-   group.add(glyph);cursor+=w;
+   group.add(glyph);cursor+=advance*scale;
   });
  });
  return group;
