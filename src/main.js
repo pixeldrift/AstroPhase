@@ -8,10 +8,10 @@ const PHASES = [
   'Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'
 ];
 const PLAYERS = [
-  {name:'Grape',color:0x9165e8,css:'grape',position:0,phases:[]},
-  {name:'Orange',color:0xf18b3c,css:'orange',position:8,phases:[]},
-  {name:'Lime',color:0x91c95d,css:'lime',position:16,phases:[]},
-  {name:'Cherry',color:0xe34e70,css:'cherry',position:24,phases:[]}
+  {name:'Grape',color:0x9165e8,css:'grape',position:0,phases:[],parts:[],boosts:0},
+  {name:'Orange',color:0xf18b3c,css:'orange',position:8,phases:[],parts:[],boosts:0},
+  {name:'Lime',color:0x91c95d,css:'lime',position:16,phases:[],parts:[],boosts:0},
+  {name:'Cherry',color:0xe34e70,css:'cherry',position:24,phases:[],parts:[],boosts:0}
 ];
 const state={current:0,turn:1,questions:[],used:new Set(),pending:false,roll:null,eventDeck:[],gameOver:false,phaseBlocked:false};
 const sceneRoot=document.querySelector('#scene');
