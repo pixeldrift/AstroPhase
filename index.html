@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080d1c" />
+    <title>AstroPhase — A Lunar Adventure</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="AstroPhase home"><span class="brand-mark">✦</span><span>ASTRO<span class="brand-light">PHASE</span></span></a>
+        <div class="top-meta"><span class="live-dot"></span> PASS &amp; PLAY <span class="meta-divider">/</span> TABLETOP VIEW</div>
+        <button class="icon-button" id="reset-view" title="Reset camera view" aria-label="Reset camera view">↗</button>
+      </header>
+      <main class="game-layout">
+        <section class="board-stage" aria-label="Interactive 3D game board">
+          <div class="stage-caption"><span class="eyebrow">THE LUNAR CIRCUIT</span><span class="stage-hint">DRAG TO ORBIT · SCROLL TO ZOOM</span></div>
+          <div id="scene"></div>
+          <div class="board-controls">
+            <button class="control-pill" id="view-top">TOP VIEW</button>
+            <button class="control-pill active" id="view-orbit">ORBIT VIEW</button>
+          </div>
+          <div class="sun-label"><span class="sun-symbol">☼</span><span>SUNLIGHT</span></div>
+        </section>
+        <aside class="sidebar">
+          <div class="sidebar-heading"><div><div class="eyebrow">MISSION CONTROL</div><h1>AstroPhase</h1></div><span class="version">PREVIEW 01</span></div>
+          <div class="turn-card">
+            <div class="card-topline"><span class="eyebrow">CURRENT PILOT</span><span class="turn-number">TURN <b id="turn-number">01</b></span></div>
+            <div class="pilot-row"><span class="pilot-avatar grape">✦</span><div class="pilot-info"><strong id="current-player">Grape</strong><span>Exploration crew</span></div><span class="active-tag">YOUR TURN</span></div>
+            <div class="progress-label"><span>PHASE COLLECTION</span><strong id="phase-count">0 <i>/ 8</i></strong></div>
+            <div class="phase-progress" id="phase-progress"></div>
+            <div class="collected-phases" id="collected-phases"><span class="empty-collection">Your lunar discoveries will appear here.</span></div><div class="parts-heading"><span>ROCKET COMPONENTS</span><strong id="parts-count">0 / 3</strong></div><div class="rocket-parts" id="rocket-parts"><span class="part-slot">EASY</span><span class="part-slot">MEDIUM</span><span class="part-slot">HARD</span></div>
+          </div>
+          <div class="launch-card">
+            <div class="eyebrow">FLIGHT DECK</div>
+            <div class="flight-row"><div><div class="flight-title">Spin your course</div><div class="flight-subtitle">Let the rocket choose your path.</div></div><div class="boost-count" id="boost-count">BOOSTS 0</div></div>
+            <div class="spinner-wrap"><div class="spinner-wheel" id="spinner-wheel"><span class="spinner-label s0">1</span><span class="spinner-label s1">3</span><span class="spinner-label s2">5</span><span class="spinner-label s3">EVENT</span><span class="spinner-label s4">2</span><span class="spinner-label s5">4</span><span class="spinner-label s6">6</span><span class="spinner-label s7">EVENT</span><span class="spinner-center"></span></div><div class="spinner-rocket" id="spinner-rocket">🚀</div></div>
+            <button class="launch-button" id="roll-button"><span>SPIN TO MOVE</span><span>↗</span></button>
+            <button class="boost-button hidden" id="use-boost">USE SAVED ROCKET BOOST ↗</button>
+            <div class="move-status" id="move-status">Your rocket is waiting at the launch point.</div>
+          </div>
+          <div class="crew-card">
+            <div class="eyebrow">FLIGHT CREW <span class="crew-count">4 PILOTS</span></div>
+            <div class="crew-list" id="crew-list"></div>
+          </div>
+          <div class="legend"><span><i class="legend-dot track-dot"></i> 32 ORBIT SPACES</span><span><i class="legend-dot phase-dot"></i> 8 MOON PHASES</span></div>
+          <div class="sidebar-footer">A JOURNEY THROUGH THE LUNAR CYCLE <span>✧</span></div>
+        </aside>
+      </main>
+      <div class="modal-backdrop hidden" id="question-modal">
+        <section class="question-modal" role="dialog" aria-modal="true" aria-labelledby="question-title">
+          <div class="modal-kicker">LUNAR KNOWLEDGE CHECK <span id="question-difficulty">EASY</span></div>
+          <h2 id="question-title">Question goes here</h2>
+          <div class="answer-list" id="answer-list"></div>
+          <div class="answer-feedback" id="answer-feedback" aria-live="polite"></div>
+          <button class="continue-button hidden" id="continue-button">CONTINUE FLIGHT <span>↗</span></button>
+        </section>
+      </div>
+      <div class="modal-backdrop hidden" id="event-modal"><section class="question-modal event-modal" role="dialog" aria-modal="true" aria-labelledby="event-title"><div class="modal-kicker">INCOMING EVENT CARD <span>MISSION ALERT</span></div><div class="event-icon" id="event-icon">✦</div><h2 id="event-title">Event title</h2><p class="event-description" id="event-description"></p><div class="event-actions" id="event-actions"></div></section></div>
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
