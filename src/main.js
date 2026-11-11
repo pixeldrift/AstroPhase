@@ -25,7 +25,7 @@ starfieldTexture.mapping=THREE.EquirectangularReflectionMapping;
 scene.background=starfieldTexture;
 scene.fog=new THREE.FogExp2(0x080d1c,.012);
 const camera=new THREE.PerspectiveCamera(38,1,.1,160);
-camera.position.set(0,22,34);
+camera.position.set(0,38,64);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
@@ -39,7 +39,7 @@ composer.addPass(new RenderPass(scene,camera));
 const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),.52,.62,.82);
 composer.addPass(bloomPass);
 const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=18;controls.maxDistance=58;
+controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=30;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05);boardAmbient.layers.set(0);scene.add(boardAmbient);
 const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.16);moonAmbient.layers.set(1);scene.add(moonAmbient);
@@ -199,7 +199,7 @@ const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.
  earthCtx.fillStyle='rgba(220,239,245,.72)';earthCtx.fillRect(0,0,1024,18);earthCtx.fillRect(0,494,1024,18);
  const earthTexture=new THREE.CanvasTexture(earthCanvas);earthTexture.colorSpace=THREE.SRGBColorSpace;
  const earth=new THREE.Mesh(new THREE.SphereGeometry(3.35,96,64),new THREE.MeshStandardMaterial({map:earthTexture,roughness:.88,metalness:0}));
- earth.position.set(0,4.25,0);earth.castShadow=false;earth.receiveShadow=true;scene.add(earth);
+ earth.position.set(0,4.25,0);earth.castShadow=false;earth.receiveShadow=true;earth.layers.set(1);scene.add(earth);
  const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.48,64,48),new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.12,side:THREE.BackSide,depthWrite:false}));
  earthAtmosphere.position.copy(earth.position);scene.add(earthAtmosphere);
 
@@ -211,7 +211,7 @@ const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
 const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.96,metalness:0});
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
 moon.layers.set(1);camera.layers.enable(1);
-sunLight.target.position.copy(moon.position);
+moon.rotation.y=-Math.PI/2;sunLight.target.position.set(19.5,4.25,0);
 sunLight.intensity=4.6;
 
 fetch('/textures/moon-displacement.tiff').then(r=>{if(!r.ok)throw new Error('Moon displacement map unavailable');return r.arrayBuffer()}).then(buffer=>{
@@ -279,13 +279,13 @@ function placeRockets(){
 }
 placeRockets();
 function updateRocketPositions(){placeRockets()}
-const orbitDots=addMesh(new THREE.TorusGeometry(13.6,.025,6,160),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=-.2;
+const orbitDots=addMesh(new THREE.TorusGeometry(33.2,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=-.2;
 function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
-function animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.00012;controls.update();rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
+function animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.000018;controls.update();rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
 animate();
 
-document.querySelector('#view-top').addEventListener('click',()=>{camera.position.set(0,42,.01);controls.target.set(0,0,0);controls.update()});
+document.querySelector('#view-top').addEventListener('click',()=>{camera.position.set(0,68,.01);controls.target.set(0,0,0);controls.update()});
 function renderHud(){
  const p=PLAYERS[state.current];
  document.querySelector('#current-player').textContent=p.name;
