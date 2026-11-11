@@ -41,7 +41,8 @@ composer.addPass(bloomPass);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=18;controls.maxDistance=58;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
-scene.add(new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05));
+const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05);boardAmbient.layers.set(0);scene.add(boardAmbient);
+const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.16);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(0,4.25,20);sunLight.castShadow=false;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
@@ -118,12 +119,14 @@ for(let i=0;i<32;i++){
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
 function makeFlatText(text,color='#dce4ff'){
- const words=text.trim().split(/\\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
- const group=new THREE.Group(),radius=7.05,lineHeight=.29,fontSize=74;
+ const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
+ const group=new THREE.Group(),fontSize=74,letterHeight=.27;
+ const boardY=.355,outerRadius=7.48,rowSpacing=.34;
  rows.forEach((line,row)=>{
   const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
   mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
   const chars=[...line],widths=chars.map(ch=>Math.max(10,mctx.measureText(ch).width)),total=widths.reduce((a,b)=>a+b,0),scale=Math.min(1,2.95/total);
+  const radius=outerRadius-row*rowSpacing;
   let cursor=-total*scale/2;
   chars.forEach((ch,index)=>{
    const w=widths[index]*scale,center=cursor+w/2,angle=center/radius;
@@ -132,10 +135,13 @@ function makeFlatText(text,color='#dce4ff'){
    ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.fillText(ch,64,72);
    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
    const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
-   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(.045,w),.30),mat);
-   // Each glyph remains rigid; only its baseline position and tangent rotation follow the circular path.
-   glyph.position.set(radius*Math.sin(angle),(rows.length-1-row)*lineHeight,radius*(Math.cos(angle)-1));
-   glyph.rotation.y=angle;group.add(glyph);cursor+=w;
+   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(.045,w),letterHeight),mat);
+   const theta=angle-Math.PI/2,radial=new THREE.Vector3(Math.cos(theta),0,Math.sin(theta));
+   const tangent=new THREE.Vector3(-Math.sin(theta),0,Math.cos(theta));
+   const normal=new THREE.Vector3(0,1,0),basis=new THREE.Matrix4().makeBasis(tangent,radial,normal);
+   glyph.position.set(radius*Math.cos(theta),boardY,radius*Math.sin(theta));
+   glyph.quaternion.setFromRotationMatrix(basis);
+   group.add(glyph);cursor+=w;
   });
  });
  return group;
@@ -168,7 +174,7 @@ for(let i=0;i<8;i++){
  token.rotation.x=-Math.PI/2;token.position.set(0,.39,0);token.receiveShadow=false;token.castShadow=false;tokenGroup.add(token);
  const icon=new THREE.Mesh(new THREE.PlaneGeometry(1.02,1.02),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
- const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.rotation.x=-Math.PI/2;label.position.set(0,.415,.94);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
+ const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});phaseGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
@@ -176,8 +182,8 @@ torus(5.05,.07,0x9b8ed5,.37);
 // Textured Moon; a little emissive fill keeps the near-side surface readable.
 const textureLoader=new THREE.TextureLoader();
 const moonAlbedo=textureLoader.load('/textures/moon-albedo.jpg');moonAlbedo.colorSpace=THREE.SRGBColorSpace;
-const moonGeometry=new THREE.SphereGeometry(2.7,160,112);
-const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x737b96),emissiveIntensity:.025,roughness:.96,metalness:0});
+const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
+const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.96,metalness:0});
 const moon=addMesh(moonGeometry,moonMat);moon.position.set(0,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
 moon.layers.set(1);camera.layers.enable(1);
 sunLight.target.position.copy(moon.position);
@@ -187,9 +193,11 @@ fetch('/textures/moon-displacement.tiff').then(r=>{if(!r.ok)throw new Error('Moo
  const ifds=UTIF.decode(buffer);if(!ifds.length)throw new Error('Could not decode TIFF displacement map');UTIF.decodeImage(buffer,ifds[0]);
  const width=ifds[0].width,height=ifds[0].height,rgba=UTIF.toRGBA8(ifds[0]),position=moonGeometry.attributes.position,uv=moonGeometry.attributes.uv;
  for(let i=0;i<position.count;i++){const u=((uv.getX(i)%1)+1)%1,v=Math.max(0,Math.min(.999999,uv.getY(i))),px=Math.min(width-1,Math.floor(u*width)),py=Math.min(height-1,Math.floor(v*height)),idx=(py*width+px)*4;
-  const luminance=(rgba[idx]*.299+rgba[idx+1]*.587+rgba[idx+2]*.114)/255,radius=2.7+(luminance-.5)*.24;
+  const luminance=(rgba[idx]*.299+rgba[idx+1]*.587+rgba[idx+2]*.114)/255,radius=2.7+(luminance-.5)*.48;
   const vertex=new THREE.Vector3().fromBufferAttribute(position,i).normalize().multiplyScalar(radius);position.setXYZ(i,vertex.x,vertex.y,vertex.z);}
  position.needsUpdate=true;moonGeometry.computeVertexNormals();
+ const bumpTexture=new THREE.DataTexture(rgba,width,height,THREE.RGBAFormat);bumpTexture.needsUpdate=true;bumpTexture.wrapS=THREE.RepeatWrapping;bumpTexture.wrapT=THREE.ClampToEdgeWrapping;bumpTexture.magFilter=THREE.LinearFilter;bumpTexture.minFilter=THREE.LinearMipmapLinearFilter;bumpTexture.generateMipmaps=true;
+ moonMat.bumpMap=bumpTexture;moonMat.bumpScale=.14;moonMat.needsUpdate=true;
 }).catch(error=>console.warn('Moon displacement map skipped:',error));
 function makeSoftGlow(cssColor,size,opacity){
  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;
@@ -214,7 +222,7 @@ const sunGroup=new THREE.Group();scene.add(sunGroup);
 let sunMaterial;
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
  const image=loaded.image,canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
- const ctx=canvas.getContext('2d');ctx.filter='brightness(1.18) contrast(.58)';ctx.drawImage(image,0,0);
+ const ctx=canvas.getContext('2d');ctx.filter='brightness(1.08) contrast(.84)';ctx.drawImage(image,0,0);
  const softenedTexture=new THREE.CanvasTexture(canvas);softenedTexture.colorSpace=THREE.SRGBColorSpace;
  if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.needsUpdate=true;}
 });sunTexture.colorSpace=THREE.SRGBColorSpace;
