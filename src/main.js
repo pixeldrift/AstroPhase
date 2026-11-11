@@ -285,7 +285,8 @@ function updateRocketPositions(){placeRockets()}
 const orbitDots=addMesh(new THREE.TorusGeometry(19.5,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=-.2;
 function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
-const moonWorldPosition=new THREE.Vector3();\nfunction animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.000018;controls.update();moon.getWorldPosition(moonWorldPosition);camera.lookAt(moonWorldPosition);sunLight.target.position.copy(moonWorldPosition);if(earthMaterial.userData.shader){earthMaterial.userData.shader.uniforms.uEarthSunDirection.value.copy(sunGroup.position).sub(earthGroup.position).normalize()}earthClouds.rotation.y=performance.now()*.000008;rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
+const moonWorldPosition=new THREE.Vector3();
+function animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.000018;controls.update();moon.getWorldPosition(moonWorldPosition);camera.lookAt(moonWorldPosition);sunLight.target.position.copy(moonWorldPosition);if(earthMaterial.userData.shader){earthMaterial.userData.shader.uniforms.uEarthSunDirection.value.copy(sunGroup.position).sub(earthGroup.position).normalize()}earthClouds.rotation.y=performance.now()*.000008;rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
 animate();
 
 document.querySelector('#view-top').addEventListener('click',()=>{camera.position.set(0,68,.01);controls.target.set(0,0,0);controls.update()});
