@@ -221,9 +221,11 @@ const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
 const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.96,metalness:0});
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
 // The board is fixed to the Moon; its quarter-token axis is aligned with the lunar terminator at the initial Sun direction.
-moon.add(board);board.position.set(0,-4.25,0);board.rotation.y=Math.PI/2;
+// Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
+// With the Moon at +X, a half-turn brings the texture's +X face toward Earth (-X).
+moon.add(board);board.position.set(0,-4.25,0);board.rotation.y=Math.PI;
 moon.layers.set(1);camera.layers.enable(1);
-moon.rotation.y=-Math.PI/2;moon.add(camera);camera.position.set(64,38,19.5);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
+moon.rotation.y=Math.PI;moon.add(camera);camera.position.set(64,38,19.5);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
 sunLight.intensity=4.6;
 
 fetch('/textures/moon-displacement.tiff').then(r=>{if(!r.ok)throw new Error('Moon displacement map unavailable');return r.arrayBuffer()}).then(buffer=>{
