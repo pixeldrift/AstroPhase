@@ -81,7 +81,8 @@ function makeLabel(text,color='#dce4ff',size=72){
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
  sprite.scale.set(3.1,.78,1);return sprite;
 }
-const board=new THREE.Group();scene.add(board);
+const earthMoonOrbit=new THREE.Group();scene.add(earthMoonOrbit);
+const board=new THREE.Group();earthMoonOrbit.add(board);board.position.x=19.5;
 const baseMat=new THREE.MeshStandardMaterial({color:0x2b3858,metalness:.48,roughness:.44});
 const base=addMesh(new THREE.CylinderGeometry(13.2,13.5,.8,128),baseMat,board);base.position.y=-.45;
 const top=addMesh(new THREE.CylinderGeometry(12.95,13.05,.16,128),new THREE.MeshStandardMaterial({color:0x1d2945,metalness:.25,roughness:.68}),board);top.position.y=.02;
@@ -176,13 +177,39 @@ for(let i=0;i<8;i++){
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
+
+ // Earth sits at the center of the Moon's orbital path. The procedural texture
+ // keeps the globe self-contained without adding an external asset dependency.
+ const earthCanvas=document.createElement('canvas');earthCanvas.width=1024;earthCanvas.height=512;
+ const earthCtx=earthCanvas.getContext('2d');
+ const ocean=earthCtx.createLinearGradient(0,0,0,512);ocean.addColorStop(0,'#174a78');ocean.addColorStop(.5,'#287fb0');ocean.addColorStop(1,'#12385f');
+ earthCtx.fillStyle=ocean;earthCtx.fillRect(0,0,1024,512);
+ earthCtx.fillStyle='#579568';earthCtx.strokeStyle='#8dbb83';earthCtx.lineWidth=5;
+ const continents=[
+  [[90,92],[150,62],[215,78],[245,126],[222,164],[190,177],[175,226],[142,218],[126,177],[92,151]],
+  [[205,244],[246,263],[266,314],[250,376],[224,432],[202,390],[190,331]],
+  [[420,88],[475,63],[520,83],[545,121],[526,158],[488,164],[462,137]],
+  [[470,181],[530,174],[574,212],[584,268],[558,332],[528,389],[494,351],[480,290],[450,241]],
+  [[590,93],[646,64],[720,76],[778,108],[834,105],[886,145],[858,181],[798,176],[765,213],[708,199],[676,163],[624,170],[588,137]],
+  [[735,245],[790,226],[831,253],[850,300],[824,352],[785,380],[754,333]],
+  [[886,344],[922,327],[953,349],[945,382],[910,393]]
+ ];
+ for(const points of continents){earthCtx.beginPath();earthCtx.moveTo(...points[0]);for(let i=1;i<points.length;i++)earthCtx.lineTo(...points[i]);earthCtx.closePath();earthCtx.fill();earthCtx.stroke();}
+ // Subtle polar ice caps.
+ earthCtx.fillStyle='rgba(220,239,245,.72)';earthCtx.fillRect(0,0,1024,18);earthCtx.fillRect(0,494,1024,18);
+ const earthTexture=new THREE.CanvasTexture(earthCanvas);earthTexture.colorSpace=THREE.SRGBColorSpace;
+ const earth=new THREE.Mesh(new THREE.SphereGeometry(3.35,96,64),new THREE.MeshStandardMaterial({map:earthTexture,roughness:.88,metalness:0}));
+ earth.position.set(0,4.25,0);earth.castShadow=false;earth.receiveShadow=true;scene.add(earth);
+ const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.48,64,48),new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.12,side:THREE.BackSide,depthWrite:false}));
+ earthAtmosphere.position.copy(earth.position);scene.add(earthAtmosphere);
+
 torus(5.05,.07,0x9b8ed5,.37);
 // Textured Moon; a little emissive fill keeps the near-side surface readable.
 const textureLoader=new THREE.TextureLoader();
 const moonAlbedo=textureLoader.load('/textures/moon-albedo.jpg');moonAlbedo.colorSpace=THREE.SRGBColorSpace;
 const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
 const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.96,metalness:0});
-const moon=addMesh(moonGeometry,moonMat);moon.position.set(0,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
+const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
 moon.layers.set(1);camera.layers.enable(1);
 sunLight.target.position.copy(moon.position);
 sunLight.intensity=4.6;
@@ -212,8 +239,8 @@ function makeSoftGlow(cssColor,size,opacity){
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,toneMapped:false}));
  sprite.scale.set(size,size,1);sprite.renderOrder=2;return sprite;
 }
-const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=2;scene.add(moonGlowOuter);
-const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=3;scene.add(moonGlowInner);
+const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=2;earthMoonOrbit.add(moonGlowOuter);
+const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=3;earthMoonOrbit.add(moonGlowInner);
 
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
@@ -255,7 +282,7 @@ function updateRocketPositions(){placeRockets()}
 const orbitDots=addMesh(new THREE.TorusGeometry(13.6,.025,6,160),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=-.2;
 function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
-function animate(){requestAnimationFrame(animate);controls.update();rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
+function animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.00012;controls.update();rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
 animate();
 
 document.querySelector('#view-top').addEventListener('click',()=>{camera.position.set(0,42,.01);controls.target.set(0,0,0);controls.update()});
