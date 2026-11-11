@@ -12,6 +12,3 @@
 #scene canvas{touch-action:none}
 .board-controls{left:24px;right:auto;bottom:24px;transform:none}
 .stage-caption{left:24px;right:24px;justify-content:flex-end}
-
-/* Screen-space celestial haze sits above the WebGL scene without post-processing the board. */
-#scene .celestial-postfx{position:absolute;inset:0;z-index:1;display:block;pointer-events:none}
