@@ -13,17 +13,26 @@ npm run dev
 
 - Adjustable 3D tabletop camera with orbit, pan and zoom controls
 - 32-space outer circuit and eight-part lunar phase ring
-- Elevated, procedurally textured Moon with directional sunlight, shadowing and glow
-- Sun marker placed in the same direction as the scene's key light
-- Four colored rocket pieces: Grape, Orange, Lime and Cherry
-- Basic pass-and-play turn flow, 1–6 movement roll and question prompts
-- Correct answers collect the lunar phase associated with the player's landing space
-- Question bank loaded from the tab-delimited `quesrikns.csv` file in the repository root
+- Elevated, procedurally textured Moon with directional sunlight, cast shadows and glow
+- Four colored rocket tokens: Grape, Orange, Lime and Cherry
+- Eight-slot spinner in the order **1, 3, 5, Event, 2, 4, 6, Event**, with a rotating rocket pointer
+- Ten-card shuffled Event deck; each card is drawn once before the deck reshuffles
+- Pass-and-play turn flow and question prompts from the root question bank
+- Correct answers collect the phase associated with the player's board position and the rocket component matching question difficulty
+- Victory requires all eight lunar phases and all three rocket components (Easy, Medium, Hard)
 
-## Notes
+## Event cards
 
-The question file has a historical `.csv` filename but is tab-delimited. Keep its six-column structure:
+Solar Flare, Crew Exchange, Solar Eclipse, Oxygen Leak, Rocket Boost, Bad Weather, Fuel Leak, Space Sick, Slingshot and Spacewalk.
+
+Rocket Boost can be used immediately or saved for a later turn. Space Sick presents a Hard question but awards the Easy rocket component. Solar Eclipse allows a knowledge question and rocket-component reward but blocks phase collection for that turn.
+
+## Question bank
+
+The existing `quesrikns.csv` file is tab-delimited despite its extension. Keep its six-column structure:
 
 `Difficulty<TAB>Questions<TAB>A<TAB>B<TAB>C<TAB>Answer`
 
-This is an early visual/gameplay foundation. Rocket-part collection by difficulty, launch/fly-to-HUD animation, persistent game setup, and a proper win flow remain to be designed and play-tested.
+## Prototype notes
+
+This is an early gameplay and visual prototype. Movement and event rules are implemented for initial play-testing; the rocket-piece HUD is an inventory abstraction for now, and the physical assembly/lift-off animation that moves collected phase tokens into the player's HUD remains future work. A browser build and play-test are still required before merging.
