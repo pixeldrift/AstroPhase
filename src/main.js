@@ -56,7 +56,7 @@ function roundedPolygonShape(points,radius){
   const prev=points[(i+points.length-1)%points.length],next=points[(i+1)%points.length];
   const d1=new THREE.Vector2(prev[0]-p[0],prev[1]-p[1]),d2=new THREE.Vector2(next[0]-p[0],next[1]-p[1]);
   const len1=d1.length(),len2=d2.length();d1.normalize();d2.normalize();
-  const corner= d1.dot(d2)<.985,r=corner?Math.min(radius,len1*.42,len2*.42):0;
+  const corner= -d1.dot(d2)<.985,r=corner?Math.min(radius,len1*.42,len2*.42):0;
   return {in:[p[0]+d1.x*r,p[1]+d1.y*r],out:[p[0]+d2.x*r,p[1]+d2.y*r],vertex:p};
  });
  shape.moveTo(corners[0].in[0],corners[0].in[1]);
