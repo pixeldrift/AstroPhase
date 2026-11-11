@@ -180,9 +180,9 @@ const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.
 
  // Earth sits at the center of the Moon's orbital path, using the supplied map set.
  const earthGroup=new THREE.Group();earthGroup.position.set(0,4.25,0);scene.add(earthGroup);
- const earthDayTexture=new THREE.TextureLoader().load('/textures/earth-day.jpg');earthDayTexture.colorSpace=THREE.SRGBColorSpace;
- const earthNightTexture=new THREE.TextureLoader().load('/textures/earth-night.jpg');earthNightTexture.colorSpace=THREE.SRGBColorSpace;
- const earthCloudTexture=new THREE.TextureLoader().load('/textures/earth-clouds.jpg');earthCloudTexture.colorSpace=THREE.SRGBColorSpace;
+ const earthDayTexture=new THREE.TextureLoader().load('/textures/earth-day.jpg');earthDayTexture.colorSpace=THREE.SRGBColorSpace;earthDayTexture.flipY=true;
+ const earthNightTexture=new THREE.TextureLoader().load('/textures/earth-night.jpg');earthNightTexture.colorSpace=THREE.SRGBColorSpace;earthNightTexture.flipY=true;
+ const earthCloudTexture=new THREE.TextureLoader().load('/textures/earth-clouds.jpg');earthCloudTexture.colorSpace=THREE.SRGBColorSpace;earthCloudTexture.flipY=true;
  const earthMaterial=new THREE.MeshPhongMaterial({map:earthDayTexture,emissive:0xffffff,emissiveMap:earthNightTexture,emissiveIntensity:.72,specular:new THREE.Color(0x4a6a86),shininess:22});
  earthMaterial.onBeforeCompile=shader=>{
   shader.uniforms.uEarthSunDirection={value:new THREE.Vector3(0,0,1)};
@@ -195,13 +195,20 @@ const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.
  const earth=new THREE.Mesh(new THREE.SphereGeometry(3.35,128,96),earthMaterial);earthGroup.add(earth);earth.layers.set(1);
  const earthCloudMaterial=new THREE.MeshPhongMaterial({map:earthCloudTexture,alphaMap:earthCloudTexture,transparent:true,opacity:.34,depthWrite:false,side:THREE.FrontSide});
  const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,96,64),earthCloudMaterial);earthGroup.add(earthClouds);earthClouds.layers.set(1);
- const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.49,64,48),new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.13,side:THREE.BackSide,depthWrite:false}));
+ const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.2,side:THREE.BackSide,depthWrite:false,depthTest:true});
+ atmosphereMaterial.onBeforeCompile=shader=>{
+  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
+  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvAtmosphereViewNormal=normalize(normalMatrix*normal);vAtmosphereViewDirection=normalize(-mvPosition.xyz);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat atmosphereFacing=abs(dot(normalize(vAtmosphereViewNormal),normalize(vAtmosphereViewDirection)));diffuseColor.a*=pow(1.0-atmosphereFacing,2.0);');
+ };
+ const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.49,96,64),atmosphereMaterial);
  earthGroup.add(earthAtmosphere);earthAtmosphere.layers.set(1);
  Promise.all([
   fetch('/textures/earth-normal.tiff').then(r=>r.arrayBuffer()),
   fetch('/textures/earth-specular.tiff').then(r=>r.arrayBuffer())
  ]).then(([normalBuffer,specularBuffer])=>{
-  const decode=(buffer)=>{const ifds=UTIF.decode(buffer);UTIF.decodeImage(buffer,ifds[0]);const rgba=UTIF.toRGBA8(ifds[0]);const tex=new THREE.DataTexture(rgba,ifds[0].width,ifds[0].height,THREE.RGBAFormat);tex.needsUpdate=true;tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;tex.colorSpace=THREE.NoColorSpace;return tex;};
+  const decode=(buffer)=>{const ifds=UTIF.decode(buffer);UTIF.decodeImage(buffer,ifds[0]);const rgba=UTIF.toRGBA8(ifds[0]);const tex=new THREE.DataTexture(rgba,ifds[0].width,ifds[0].height,THREE.RGBAFormat);tex.flipY=true;tex.needsUpdate=true;tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.ClampToEdgeWrapping;tex.magFilter=THREE.LinearFilter;tex.minFilter=THREE.LinearMipmapLinearFilter;tex.generateMipmaps=true;tex.colorSpace=THREE.NoColorSpace;return tex;};
   earthMaterial.normalMap=decode(normalBuffer);earthMaterial.normalScale.set(.72,.72);
   earthMaterial.specularMap=decode(specularBuffer);earthMaterial.needsUpdate=true;
  }).catch(error=>console.warn('Earth detail maps skipped:',error));
@@ -282,11 +289,13 @@ function placeRockets(){
 }
 placeRockets();
 function updateRocketPositions(){placeRockets()}
-const orbitDots=addMesh(new THREE.TorusGeometry(19.5,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=4.25;
+const moonOrbitRadius=moon.position.distanceTo(earthGroup.position);
+const orbitDots=addMesh(new THREE.TorusGeometry(moonOrbitRadius,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.copy(earthGroup.position);
 function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
 const moonWorldPosition=new THREE.Vector3();
-function animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.000018;controls.update();moon.getWorldPosition(moonWorldPosition);camera.lookAt(moonWorldPosition);sunLight.target.position.copy(moonWorldPosition);if(earthMaterial.userData.shader){earthMaterial.userData.shader.uniforms.uEarthSunDirection.value.copy(sunGroup.position).sub(earthGroup.position).normalize()}earthClouds.rotation.y=performance.now()*.000008;rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
+const sunWorldPosition=new THREE.Vector3(),earthWorldPosition=new THREE.Vector3(),sunDirectionInOrbit=new THREE.Vector3(),inverseOrbitRotation=new THREE.Quaternion();
+function animate(){requestAnimationFrame(animate);earthMoonOrbit.rotation.y=performance.now()*.000018;sunGroup.getWorldPosition(sunWorldPosition);earthGroup.getWorldPosition(earthWorldPosition);sunDirectionInOrbit.copy(sunWorldPosition).sub(earthWorldPosition).normalize();earthMoonOrbit.getWorldQuaternion(inverseOrbitRotation);sunDirectionInOrbit.applyQuaternion(inverseOrbitRotation.invert());board.rotation.y=Math.atan2(sunDirectionInOrbit.x,sunDirectionInOrbit.z);controls.update();moon.getWorldPosition(moonWorldPosition);camera.lookAt(moonWorldPosition);sunLight.target.position.copy(moonWorldPosition);if(earthMaterial.userData.shader){earthMaterial.userData.shader.uniforms.uEarthSunDirection.value.copy(sunWorldPosition).sub(earthWorldPosition).normalize()}earthClouds.rotation.y=performance.now()*.000008;rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});composer.render()}
 animate();
 
 document.querySelector('#view-top').addEventListener('click',()=>{camera.position.set(0,68,.01);controls.target.set(0,0,0);controls.update()});
