@@ -119,9 +119,9 @@ for(let i=0;i<32;i++){
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
 function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
- const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
+ const words=text.trim().split(/\\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
  const group=new THREE.Group(),fontSize=74,letterHeight=.27;
- const boardY=.355,outerRadius=7.48,rowSpacing=.34;
+ const boardY=.385,outerRadius=7.48,rowSpacing=.34;
  rows.forEach((line,row)=>{
   const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
   mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
@@ -131,19 +131,22 @@ function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
   chars.forEach((ch,index)=>{
    const advance=advances[index],angle=(cursor+advance*scale/2)/radius,theta=centerAngle+angle;
    const canvas=document.createElement('canvas');canvas.width=Math.max(32,Math.ceil(metrics[index].width+12));canvas.height=fontSize+16;
-   const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=5;ctx.fillText(ch,canvas.width/2,canvas.height/2);
+   const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='alphabetic';
+   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=5;
+   // Mirror the glyph bitmap because its local horizontal axis runs opposite the reading direction.
+   ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.fillText(ch,canvas.width/2,fontSize+7);ctx.restore();
    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
-   const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+   const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.FrontSide});
    const glyphWidth=(canvas.width/canvas.height)*letterHeight*scale;
    const glyph=new THREE.Mesh(new THREE.PlaneGeometry(glyphWidth,letterHeight*scale),mat);
-   // Rigid glyphs: tangent-aligned, with the baseline on the outer edge and tops pointing inward.
+   // A right-handed, upward-facing basis keeps glyphs rigid and readable from above.
    const tangent=new THREE.Vector3(-Math.sin(theta),0,Math.cos(theta));
    const inward=new THREE.Vector3(-Math.cos(theta),0,-Math.sin(theta));
-   const normal=new THREE.Vector3(0,-1,0),basis=new THREE.Matrix4().makeBasis(tangent,inward,normal);
-   glyph.position.set(radius*Math.cos(theta),boardY+.012,radius*Math.sin(theta));
+   const xAxis=tangent.clone().negate(),yAxis=inward,zAxis=new THREE.Vector3(0,1,0);
+   const basis=new THREE.Matrix4().makeBasis(xAxis,yAxis,zAxis);
+   glyph.position.set(radius*Math.cos(theta),boardY,radius*Math.sin(theta));
    glyph.quaternion.setFromRotationMatrix(basis);
-   group.add(glyph);cursor+=advance*scale;
+   glyph.renderOrder=4;group.add(glyph);cursor+=advance*scale;
   });
  });
  return group;
