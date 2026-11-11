@@ -11,13 +11,14 @@ npm run dev
 
 ## Current prototype
 
-- Adjustable 3D tabletop camera with orbit, pan and zoom controls
-- 32-space outer circuit and eight curved lunar-phase sectors
+- Adjustable 3D tabletop camera with orbit, pan and zoom controls; one top-view shortcut
+- 32 individually raised, beveled outer spaces on a terraced annular deck, grouped four per lunar phase
+- Eight curved lunar-phase sectors with larger phase medallions and labels
 - Textured Moon using the supplied lunar albedo and TIFF displacement maps
 - Textured Sun with bright emissive surface and soft Fresnel edge glow
 - Moon uses a dedicated directional light on its own Three.js layer, so the Sun illuminates the Moon without becoming the board's key light
-- Sun and Moon share the same vertical position, giving the lunar terminator a horizontal light direction (vertical day/night boundary)
-- Camera-facing radial-gradient sprites for soft, feathered celestial glow; no global bloom post-processing
+- Sun and Moon share the same height; sunlight comes from the Full Moon side so New Moon faces the dark hemisphere, Full Moon faces the lit hemisphere, and the terminator aligns with the quarter phases
+- Two-layer, camera-facing radial-gradient halos applied only to the Sun and Moon; no global bloom post-processing
 - Independent hemisphere and fill lighting for the board and player pieces
 - Supplied equirectangular star-field background texture
 - Four upright colored rocket pieces: Grape, Orange, Lime and Cherry
