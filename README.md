@@ -18,7 +18,9 @@ npm run dev
 - Textured Sun with bright emissive surface and soft Fresnel edge glow
 - Moon uses a dedicated directional light on its own Three.js layer, so the Sun illuminates the Moon without becoming the board's key light
 - Sun and Moon share the same height; sunlight comes from the Full Moon side so New Moon faces the dark hemisphere, Full Moon faces the lit hemisphere, and the terminator aligns with the quarter phases
-- Two-layer, camera-facing radial-gradient halos applied only to the Sun and Moon; no global bloom post-processing
+- Camera-facing radial halos plus a separate 2-D screen-space haze and restrained lens flare for the Sun and Moon only; no global bloom post-processing
+- Shortened outer player-space wedges with player markers and numbering repositioned to match
+- Board fill illumination remains independent of the celestial glow and directional light
 - Independent hemisphere and fill lighting for the board and player pieces
 - Supplied equirectangular star-field background texture
 - Four upright colored rocket pieces: Grape, Orange, Lime and Cherry
@@ -39,7 +41,7 @@ The supplied `IMG_8403.jpeg` star field is installed as `public/textures/starfie
 ## Future visual direction
 
 - Earth as a distant celestial body, positioned consistently with the Sun/Moon composition
-- Lens flare elements tied to camera visibility and screen-space alignment of the Sun, kept subtle and art-directed
+- Further art-direct the celestial-only lens flare intensity after browser play-testing
 - Tune the star-field exposure in context only if play-testing shows it needs adjustment
 
 ## Question bank
