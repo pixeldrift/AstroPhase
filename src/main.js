@@ -140,7 +140,7 @@ function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
    // Rigid glyphs: tangent-aligned, with the baseline on the outer edge and tops pointing inward.
    const tangent=new THREE.Vector3(-Math.sin(theta),0,Math.cos(theta));
    const inward=new THREE.Vector3(-Math.cos(theta),0,-Math.sin(theta));
-   const normal=new THREE.Vector3(0,1,0),basis=new THREE.Matrix4().makeBasis(tangent,inward,normal);
+   const normal=new THREE.Vector3(0,-1,0),basis=new THREE.Matrix4().makeBasis(tangent,inward,normal);
    glyph.position.set(radius*Math.cos(theta),boardY+.012,radius*Math.sin(theta));
    glyph.quaternion.setFromRotationMatrix(basis);
    group.add(glyph);cursor+=advance*scale;
