@@ -17,10 +17,12 @@ npm run dev
 - Textured Sun with bright emissive surface and soft Fresnel edge glow
 - Moon uses a dedicated directional light on its own Three.js layer, so the Sun illuminates the Moon without becoming the board's key light
 - Sun and Moon share the same vertical position, giving the lunar terminator a horizontal light direction (vertical day/night boundary)
-- Soft Fresnel halos plus Unreal Bloom post-processing for diffuse celestial glow
+- Camera-facing radial-gradient sprites for soft, feathered celestial glow; no global bloom post-processing
 - Independent hemisphere and fill lighting for the board and player pieces
-- Round, anti-aliased procedural stars (not square point sprites)
+- Supplied equirectangular star-field background texture
 - Four upright colored rocket pieces: Grape, Orange, Lime and Cherry
+- Outer track is explicitly grouped into four spaces per lunar phase sector
+- Phase medallions use projected-sphere illumination, showing the correct waxing-right / waning-left sequence
 - Eight-slot spinner, event deck, pass-and-play questions and phase/component collection
 
 ## Art assets
