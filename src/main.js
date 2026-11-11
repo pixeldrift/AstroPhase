@@ -20,7 +20,10 @@ const PLAYERS = [
 const state={current:0,turn:1,questions:[],used:new Set(),pending:false,roll:null,eventDeck:[],gameOver:false,phaseBlocked:false};
 const sceneRoot=document.querySelector('#scene');
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x080d1c);
+const starfieldTexture=new THREE.TextureLoader().load('/textures/starfield.jpg');
+starfieldTexture.colorSpace=THREE.SRGBColorSpace;
+starfieldTexture.mapping=THREE.EquirectangularReflectionMapping;
+scene.background=starfieldTexture;
 scene.fog=new THREE.FogExp2(0x080d1c,.012);
 const camera=new THREE.PerspectiveCamera(38,1,.1,160);
 camera.position.set(0,22,34);
@@ -48,26 +51,8 @@ sunLight.shadow.camera.left=-19;sunLight.shadow.camera.right=19;sunLight.shadow.
 sunLight.shadow.bias=-.0003;scene.add(sunLight);scene.add(sunLight.target);
 const fillLight=new THREE.PointLight(0x536da9,30,45);fillLight.position.set(12,9,12);scene.add(fillLight);
 
-function makeStars(){
- const geo=new THREE.BufferGeometry(),points=[],sizes=[],alphas=[];
- for(let i=0;i<1900;i++){
-  const v=new THREE.Vector3((Math.random()-.5)*120,(Math.random()-.5)*65,(Math.random()-.5)*120);
-  if(v.length()<36)v.setLength(36);
-  points.push(v.x,v.y,v.z);sizes.push(.7+Math.random()*2.0);alphas.push(.28+Math.random()*.7);
- }
- geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
- geo.setAttribute('aSize',new THREE.Float32BufferAttribute(sizes,1));
- geo.setAttribute('aAlpha',new THREE.Float32BufferAttribute(alphas,1));
- const mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,vertexShader:`
- attribute float aSize;attribute float aAlpha;varying float vAlpha;
- void main(){vAlpha=aAlpha;vec4 mvPosition=modelViewMatrix*vec4(position,1.0);gl_PointSize=aSize*(260.0/max(1.0,-mvPosition.z));gl_Position=projectionMatrix*mvPosition;}
- `,fragmentShader:`
- varying float vAlpha;
- void main(){vec2 p=gl_PointCoord-vec2(.5);float r=length(p);float alpha=(1.0-smoothstep(.28,.5,r))*vAlpha;if(alpha<.015)discard;gl_FragColor=vec4(vec3(.72,.81,1.0),alpha);}
- `});
- scene.add(new THREE.Points(geo,mat));
-}
-makeStars();
+// Star field is supplied as an equirectangular background texture.
+
 function addMesh(geometry,material,parent=scene){const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
 function makeLabel(text,color='#dce4ff',size=72){
  const c=document.createElement('canvas');c.width=512;c.height=128;
