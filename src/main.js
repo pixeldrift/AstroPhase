@@ -34,16 +34,37 @@ sceneRoot.appendChild(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=18;controls.maxDistance=58;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
-scene.add(new THREE.HemisphereLight(0x9eb8ed,0x171322,1.28));
+scene.add(new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05));
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(0,4.25,20);sunLight.castShadow=false;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
 sunLight.shadow.camera.left=-19;sunLight.shadow.camera.right=19;sunLight.shadow.camera.top=19;sunLight.shadow.camera.bottom=-19;
 sunLight.shadow.bias=-.0003;scene.add(sunLight);scene.add(sunLight.target);
-const fillLight=new THREE.PointLight(0x536da9,38,45);fillLight.position.set(12,9,12);scene.add(fillLight);
+const fillLight=new THREE.PointLight(0x718ac2,62,48);fillLight.position.set(12,9,12);scene.add(fillLight);
 
 // Star field is supplied as an equirectangular background texture.
 
+function roundedPolygonShape(points,radius){
+ const shape=new THREE.Shape(),corners=points.map((p,i)=>{
+  const prev=points[(i+points.length-1)%points.length],next=points[(i+1)%points.length];
+  const d1=new THREE.Vector2(prev[0]-p[0],prev[1]-p[1]),d2=new THREE.Vector2(next[0]-p[0],next[1]-p[1]);
+  const len1=d1.length(),len2=d2.length(),r=Math.min(radius,len1*.42,len2*.42);
+  d1.normalize();d2.normalize();
+  return {in:[p[0]+d1.x*r,p[1]+d1.y*r],out:[p[0]+d2.x*r,p[1]+d2.y*r],vertex:p};
+ });
+ shape.moveTo(corners[0].in[0],corners[0].in[1]);
+ for(let i=0;i<corners.length;i++){
+  const c=corners[i];shape.quadraticCurveTo(c.vertex[0],c.vertex[1],c.out[0],c.out[1]);
+  const next=corners[(i+1)%corners.length];shape.lineTo(next.in[0],next.in[1]);
+ }
+ shape.closePath();return shape;
+}
+function annularSectorPoints(inner,outer,start,end,segments=18){
+ const points=[];
+ for(let i=0;i<=segments;i++){const a=start+(end-start)*i/segments;points.push([Math.cos(a)*outer,Math.sin(a)*outer]);}
+ for(let i=segments;i>=0;i--){const a=start+(end-start)*i/segments;points.push([Math.cos(a)*inner,Math.sin(a)*inner]);}
+ return points;
+}
 function addMesh(geometry,material,parent=scene){const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
 function makeLabel(text,color='#dce4ff',size=72){
  const c=document.createElement('canvas');c.width=512;c.height=128;
@@ -53,9 +74,9 @@ function makeLabel(text,color='#dce4ff',size=72){
  sprite.scale.set(3.1,.78,1);return sprite;
 }
 const board=new THREE.Group();scene.add(board);
-const baseMat=new THREE.MeshStandardMaterial({color:0x202a47,metalness:.62,roughness:.38});
+const baseMat=new THREE.MeshStandardMaterial({color:0x2b3858,metalness:.48,roughness:.44});
 const base=addMesh(new THREE.CylinderGeometry(13.2,13.5,.8,128),baseMat,board);base.position.y=-.45;
-const top=addMesh(new THREE.CylinderGeometry(12.95,13.05,.16,128),new THREE.MeshStandardMaterial({color:0x111a31,metalness:.35,roughness:.62}),board);top.position.y=.02;
+const top=addMesh(new THREE.CylinderGeometry(12.95,13.05,.16,128),new THREE.MeshStandardMaterial({color:0x1d2945,metalness:.25,roughness:.68}),board);top.position.y=.02;
 function makeTier(inner,outer,depth,y,color){
  const shape=new THREE.Shape();shape.absarc(0,0,outer,0,Math.PI*2,false);
  const hole=new THREE.Path();hole.absarc(0,0,inner,0,Math.PI*2,true);shape.holes.push(hole);
@@ -65,11 +86,11 @@ function makeTier(inner,outer,depth,y,color){
  mesh.position.y=y;mesh.castShadow=true;mesh.receiveShadow=true;return mesh;
 }
 // Raised annular decks restore the layered, machined tabletop profile.
-makeTier(8.65,12.9,.28,.1,0x283653);
-makeTier(5.18,8.48,.2,.1,0x242d4c);
+makeTier(8.65,12.9,.28,.1,0x354766);
+makeTier(5.18,8.48,.2,.1,0x303c5b);
 function torus(radius,tube,color,y){const m=addMesh(new THREE.TorusGeometry(radius,tube,10,160),new THREE.MeshStandardMaterial({color,metalness:.75,roughness:.32,emissive:color,emissiveIntensity:.13}),board);m.rotation.x=Math.PI/2;m.position.y=y;return m}
 torus(12.75,.075,0x6678a5,.4);torus(8.35,.09,0x7884b8,.32);torus(5.05,.055,0x7565b8,.37);
-const tileMaterials=[0x344568,0x3c4c70,0x344568,0x3c4c70];
+const tileMaterials=[0x465a7d,0x50658b,0x465a7d,0x50658b];
 const trackTiles=[];
 const sectorAngle=Math.PI/4,phaseGap=sectorAngle*.06,innerGap=sectorAngle*.025;
 const tileSpan=(sectorAngle-phaseGap-3*innerGap)/4,slotStep=tileSpan+innerGap;
@@ -79,12 +100,7 @@ for(let i=0;i<32;i++){
  const groupStart=-(sectorAngle-phaseGap)/2;
  const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
  const half=tileSpan/2,inner=9.05,outer=11.7;
- const shape=new THREE.Shape();
- shape.moveTo(Math.cos(a-half)*inner,Math.sin(a-half)*inner);
- shape.lineTo(Math.cos(a-half)*outer,Math.sin(a-half)*outer);
- shape.absarc(0,0,outer,a-half,a+half,false);
- shape.lineTo(Math.cos(a+half)*inner,Math.sin(a+half)*inner);
- shape.absarc(0,0,inner,a+half,a-half,true);shape.closePath();
+ const shape=roundedPolygonShape(annularSectorPoints(inner,outer,a-half,a+half,18),.13);
  const geo=new THREE.ExtrudeGeometry(shape,{depth:.18,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.035,bevelThickness:.025,curveSegments:8});
  geo.rotateX(-Math.PI/2);
  const tile=addMesh(geo,new THREE.MeshStandardMaterial({color:tileMaterials[slotInPhase],metalness:.32,roughness:.52,side:THREE.DoubleSide}),board);
@@ -102,9 +118,8 @@ function makeFlatText(text,color='#dce4ff'){
 }
 for(let i=0;i<8;i++){
  const a=-Math.PI/2+(i/8)*Math.PI*2,half=(Math.PI/8)*.94,ri=5.45,ro=8.15;
- const sh=new THREE.Shape();sh.moveTo(Math.cos(a-half)*ri,Math.sin(a-half)*ri);sh.lineTo(Math.cos(a-half)*ro,Math.sin(a-half)*ro);
- sh.absarc(0,0,ro,a-half,a+half,false);sh.lineTo(Math.cos(a+half)*ri,Math.sin(a+half)*ri);sh.absarc(0,0,ri,a+half,a-half,true);sh.closePath();
- const mesh=addMesh(new THREE.ShapeGeometry(sh,24),new THREE.MeshStandardMaterial({color:0x222b48,metalness:.22,roughness:.72,side:THREE.DoubleSide}),phaseGroup);
+ const sh=roundedPolygonShape(annularSectorPoints(ri,ro,a-half,a+half,24),.16);
+ const mesh=addMesh(new THREE.ShapeGeometry(sh,24),new THREE.MeshStandardMaterial({color:0x303b5b,metalness:.12,roughness:.78,side:THREE.DoubleSide}),phaseGroup);
  mesh.rotation.x=-Math.PI/2;mesh.position.y=.3;mesh.userData.phase=i;mesh.castShadow=false;phaseMeshes.push(mesh);
  const tokenGroup=new THREE.Group();phaseGroup.add(tokenGroup);tokenGroup.rotation.y=Math.PI/2-a;
  const iconCanvas=document.createElement('canvas');iconCanvas.width=256;iconCanvas.height=256;
@@ -183,7 +198,7 @@ celestialFx.className='celestial-postfx';
 celestialFx.setAttribute('aria-hidden','true');
 sceneRoot.appendChild(celestialFx);
 const fxContext=celestialFx.getContext('2d');
-const fxMoonPosition=new THREE.Vector3(),fxSunPosition=new THREE.Vector3();
+const fxMoonPosition=new THREE.Vector3(),fxSunPosition=new THREE.Vector3(),fxMoonEdge=new THREE.Vector3();
 function resizeCelestialPostFX(){
  const width=sceneRoot.clientWidth,height=sceneRoot.clientHeight,dpr=Math.min(devicePixelRatio,2);
  celestialFx.width=Math.round(width*dpr);celestialFx.height=Math.round(height*dpr);
@@ -195,6 +210,8 @@ function drawRadialHaze(x,y,radius,stops){
  stops.forEach(([at,color])=>g.addColorStop(at,color));
  fxContext.fillStyle=g;fxContext.beginPath();fxContext.arc(x,y,radius,0,Math.PI*2);fxContext.fill();
 }
+function moonPointNdcX(point){return (point.x/sceneRoot.clientWidth)*2-1}
+function moonPointNdcY(point){return 1-(point.y/sceneRoot.clientHeight)*2}
 function renderCelestialPostFX(){
  const width=sceneRoot.clientWidth,height=sceneRoot.clientHeight;
  if(!width||!height)return;
@@ -228,7 +245,12 @@ function renderCelestialPostFX(){
   }
   fxContext.restore();
  };
- drawBody(moonPoint,'moon');drawBody(sunPoint,'sun');
+ drawBody(sunPoint,'sun');
+ // The screen-space sun haze must not wash over the moon's rendered surface.
+ const moonEdge=fxMoonEdge.copy(moon.position).add(new THREE.Vector3(2.7,0,0)).project(camera);
+ const moonRadius=Math.hypot((moonEdge.x-moonPointNdcX(moon))/2*width,(moonEdge.y-moonPointNdcY(moon))/2*height);
+ fxContext.save();fxContext.globalCompositeOperation='destination-out';fxContext.beginPath();fxContext.arc(moonPoint.x,moonPoint.y,Math.max(0,moonRadius+3),0,Math.PI*2);fxContext.fill();fxContext.restore();
+ drawBody(moonPoint,'moon');
 }
 resizeCelestialPostFX();
 function makeRocket(color){
