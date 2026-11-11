@@ -68,14 +68,14 @@ function makeTier(inner,outer,depth,y,color){
 makeTier(8.65,12.9,.28,.1,0x283653);
 makeTier(5.18,8.48,.2,.1,0x242d4c);
 function torus(radius,tube,color,y){const m=addMesh(new THREE.TorusGeometry(radius,tube,10,160),new THREE.MeshStandardMaterial({color,metalness:.75,roughness:.32,emissive:color,emissiveIntensity:.13}),board);m.rotation.x=Math.PI/2;m.position.y=y;return m}
-torus(12.75,.075,0x6678a5,.15);torus(8.35,.09,0x7884b8,.19);torus(5.05,.055,0x7565b8,.22);
+torus(12.75,.075,0x6678a5,.4);torus(8.35,.09,0x7884b8,.32);torus(5.05,.055,0x7565b8,.37);
 const tileMaterials=[0x344568,0x3c4c70,0x344568,0x3c4c70];
 const trackTiles=[];
 const sectorAngle=Math.PI/4,phaseGap=sectorAngle*.06,innerGap=sectorAngle*.025;
 const tileSpan=(sectorAngle-phaseGap-3*innerGap)/4,slotStep=tileSpan+innerGap;
 for(let i=0;i<32;i++){
  const phaseIndex=Math.floor(i/4),slotInPhase=i%4;
- const phaseCenter=-Math.PI/2+(phaseIndex/8)*Math.PI*2;
+ const phaseCenter=-Math.PI/2-(phaseIndex/8)*Math.PI*2;
  const groupStart=-(sectorAngle-phaseGap)/2;
  const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
  const half=tileSpan/2,inner=9.05,outer=12.5;
