@@ -75,7 +75,7 @@ const sectorAngle=Math.PI/4,phaseGap=sectorAngle*.06,innerGap=sectorAngle*.025;
 const tileSpan=(sectorAngle-phaseGap-3*innerGap)/4,slotStep=tileSpan+innerGap;
 for(let i=0;i<32;i++){
  const phaseIndex=Math.floor(i/4),slotInPhase=i%4;
- const phaseCenter=-Math.PI/2-(phaseIndex/8)*Math.PI*2;
+ const phaseCenter=-Math.PI/2+(phaseIndex/8)*Math.PI*2;
  const groupStart=-(sectorAngle-phaseGap)/2;
  const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
  const half=tileSpan/2,inner=9.05,outer=12.5;
@@ -101,7 +101,7 @@ function makeFlatText(text,color='#dce4ff'){
  return new THREE.Mesh(new THREE.PlaneGeometry(2.35,.44),new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
 }
 for(let i=0;i<8;i++){
- const a=-Math.PI/2-(i/8)*Math.PI*2,half=(Math.PI/8)*.94,ri=5.45,ro=8.15;
+ const a=-Math.PI/2+(i/8)*Math.PI*2,half=(Math.PI/8)*.94,ri=5.45,ro=8.15;
  const sh=new THREE.Shape();sh.moveTo(Math.cos(a-half)*ri,Math.sin(a-half)*ri);sh.lineTo(Math.cos(a-half)*ro,Math.sin(a-half)*ro);
  sh.absarc(0,0,ro,a-half,a+half,false);sh.lineTo(Math.cos(a+half)*ri,Math.sin(a+half)*ri);sh.absarc(0,0,ri,a+half,a-half,true);sh.closePath();
  const mesh=addMesh(new THREE.ShapeGeometry(sh,24),new THREE.MeshStandardMaterial({color:0x222b48,metalness:.22,roughness:.72,side:THREE.DoubleSide}),phaseGroup);
@@ -166,15 +166,15 @@ function makeSoftGlow(cssColor,size,opacity){
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,toneMapped:false}));
  sprite.scale.set(size,size,1);sprite.renderOrder=2;return sprite;
 }
-const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);scene.add(moonGlowOuter);
-const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);scene.add(moonGlowInner);
+const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=2;scene.add(moonGlowOuter);
+const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=3;scene.add(moonGlowInner);
 
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
 const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffffff,emissive:0xffd08a,emissiveIntensity:1.9,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',8.6,.48);sunGlowOuter.position.set(0,0,0);sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,214,150,COLOR)',5.2,.38);sunGlowInner.position.set(0,0,0);sunGroup.add(sunGlowInner);
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',8.6,.48);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,214,150,COLOR)',5.2,.38);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(0,4.25,20);
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
@@ -189,7 +189,7 @@ const rocketMeshes=PLAYERS.map(p=>{const r=makeRocket(p.color);scene.add(r);retu
 function placeRockets(){
  PLAYERS.forEach((p,i)=>{
   const phaseIndex=Math.floor(p.position/4),slotInPhase=p.position%4;
-  const phaseCenter=-Math.PI/2-(phaseIndex/8)*Math.PI*2;
+  const phaseCenter=-Math.PI/2+(phaseIndex/8)*Math.PI*2;
   const groupStart=-(sectorAngle-phaseGap)/2;
   const a=phaseCenter+groupStart+tileSpan/2+slotInPhase*slotStep;
   const r=10.78+(i-1.5)*.43;
