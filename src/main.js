@@ -134,7 +134,7 @@ const halo=addMesh(new THREE.SphereGeometry(2.92,48,32),new THREE.MeshBasicMater
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg');sunTexture.colorSpace=THREE.SRGBColorSpace;
-const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshBasicMaterial({map:sunTexture,color:0xffedcf,toneMapped:false}),sunGroup);sunBall.castShadow=false;
+const sunBall=addMesh(new THREE.SphereGeometry(1.15,64,48),new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,color:0xffe6c7,emissive:0xffc17a,emissiveIntensity:1.45,roughness:1,metalness:0,toneMapped:false}),sunGroup);sunBall.castShadow=false;
 const sunGlow=addMesh(new THREE.SphereGeometry(1.75,48,32),new THREE.MeshBasicMaterial({color:0xffa84c,transparent:true,opacity:.18,side:THREE.BackSide,toneMapped:false}),sunGroup);sunGlow.castShadow=false;
 const sunOuterGlow=addMesh(new THREE.SphereGeometry(2.35,48,32),new THREE.MeshBasicMaterial({color:0xff8a32,transparent:true,opacity:.055,side:THREE.BackSide,toneMapped:false}),sunGroup);sunOuterGlow.castShadow=false;
 sunGroup.position.set(-17,11,-13);
