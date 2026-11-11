@@ -44,7 +44,7 @@ controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05);boardAmbient.layers.set(0);scene.add(boardAmbient);
 const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.16);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
-sunLight.position.set(0,4.25,80);sunLight.castShadow=false;sunLight.layers.set(1);
+sunLight.position.set(0,4.25,50);sunLight.castShadow=false;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
 sunLight.shadow.camera.left=-19;sunLight.shadow.camera.right=19;sunLight.shadow.camera.top=19;sunLight.shadow.camera.bottom=-19;
 sunLight.shadow.bias=-.0003;scene.add(sunLight);scene.add(sunLight.target);
@@ -214,7 +214,7 @@ const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
 const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.96,metalness:0});
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=false;moon.receiveShadow=false;
 moon.layers.set(1);camera.layers.enable(1);
-moon.rotation.y=-Math.PI/2;moon.add(camera);camera.position.set(0,38,64);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
+moon.rotation.y=-Math.PI/2;moon.add(camera);camera.position.set(64,38,19.5);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
 sunLight.intensity=4.6;
 
 fetch('/textures/moon-displacement.tiff').then(r=>{if(!r.ok)throw new Error('Moon displacement map unavailable');return r.arrayBuffer()}).then(buffer=>{
@@ -255,10 +255,10 @@ const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
  if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.needsUpdate=true;}
 });sunTexture.colorSpace=THREE.SRGBColorSpace;
 sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissive:0xffd08a,emissiveIntensity:1.9,roughness:1,metalness:0,toneMapped:false});
-const sunBall=addMesh(new THREE.SphereGeometry(3.35,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',35.5,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',21,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
-sunGroup.position.set(0,4.25,80);
+const sunBall=addMesh(new THREE.SphereGeometry(2.3,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',24.4,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',14.4,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
+sunGroup.position.set(0,4.25,50);
 
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
@@ -282,7 +282,7 @@ function placeRockets(){
 }
 placeRockets();
 function updateRocketPositions(){placeRockets()}
-const orbitDots=addMesh(new THREE.TorusGeometry(19.5,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=-.2;
+const orbitDots=addMesh(new THREE.TorusGeometry(19.5,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.y=4.25;
 function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
 const moonWorldPosition=new THREE.Vector3();
