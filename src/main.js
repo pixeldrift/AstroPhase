@@ -119,7 +119,7 @@ for(let i=0;i<32;i++){
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
 function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
- const words=text.trim().split(/\\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
+ const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
  const group=new THREE.Group(),fontSize=74,letterHeight=.27;
  const boardY=.385,outerRadius=7.48,rowSpacing=.34;
  rows.forEach((line,row)=>{
