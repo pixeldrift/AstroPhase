@@ -118,34 +118,26 @@ for(let i=0;i<32;i++){
 }
 const phaseGroup=new THREE.Group();board.add(phaseGroup);
 const phaseMeshes=[];
-function makeFlatText(text,color='#dce4ff',centerAngle=-Math.PI/2){
+function makeFlatText(text,color='#dce4ff'){
  const words=text.trim().split(/\s+/),mid=Math.ceil(words.length/2),rows=[words.slice(0,mid).join(' '),words.slice(mid).join(' ')].filter(Boolean);
- const group=new THREE.Group(),fontSize=74,letterHeight=.27;
- const boardY=.43,outerRadius=7.48,rowSpacing=.34;
+ const group=new THREE.Group(),radius=6.5,lineHeight=.29,fontSize=74;
  rows.forEach((line,row)=>{
   const measure=document.createElement('canvas'),mctx=measure.getContext('2d');
   mctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;
-  const chars=[...line],metrics=chars.map(ch=>mctx.measureText(ch)),advances=metrics.map(m=>Math.max(8,m.width/fontSize*letterHeight));
-  const total=advances.reduce((a,b)=>a+b,0),scale=Math.min(1,2.95/total),radius=outerRadius-row*rowSpacing;
+  const widths=[...line].map(ch=>Math.max(10,mctx.measureText(ch).width)),total=widths.reduce((a,b)=>a+b,0),scale=Math.min(1,2.95/total);
   let cursor=-total*scale/2;
-  chars.forEach((ch,index)=>{
-   const advance=advances[index],angle=(cursor+advance*scale/2)/radius,theta=centerAngle-angle;
-   const canvas=document.createElement('canvas');canvas.width=Math.max(32,Math.ceil(metrics[index].width+12));canvas.height=fontSize+40;
-   const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='alphabetic';
-   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=5;
-   ctx.fillText(ch,canvas.width/2,fontSize+7);
+  [...line].forEach((ch,index)=>{
+   const w=widths[index]*scale,canvas=document.createElement('canvas');canvas.width=128;canvas.height=144;
+   const ctx=canvas.getContext('2d');ctx.font=`700 ${fontSize}px "DM Sans",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.fillText(ch,64,72);
    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
    const mat=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
-   const glyphWidth=(canvas.width/canvas.height)*letterHeight*scale;
-   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(glyphWidth,letterHeight*scale),mat);
-   // Local +Y points toward the moon; local +X follows the reading direction around the arc.
-   const tangent=new THREE.Vector3(-Math.sin(theta),0,Math.cos(theta));
-   const inward=new THREE.Vector3(-Math.cos(theta),0,-Math.sin(theta));
-   const xAxis=tangent.clone().negate(),yAxis=inward,zAxis=new THREE.Vector3(0,1,0);
-   const basis=new THREE.Matrix4().makeBasis(xAxis,yAxis,zAxis);
-   glyph.position.set(radius*Math.cos(theta),boardY,radius*Math.sin(theta));
-   glyph.quaternion.setFromRotationMatrix(basis);
-   glyph.renderOrder=4;group.add(glyph);cursor+=advance*scale;
+   const glyph=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(.045,w),.30),mat);
+   const center=cursor+w/2,angle=center/radius;
+   // Preserve the previously working local curved-text layout; only glyph positions and tangent rotations follow the arc.
+   glyph.position.set(radius*Math.sin(angle),(rows.length-1-row)*lineHeight,-radius*(1-Math.cos(angle)));
+   glyph.rotation.y=-angle;
+   glyph.position.z+=.012;group.add(glyph);cursor+=w;
   });
  });
  return group;
@@ -178,7 +170,7 @@ for(let i=0;i<8;i++){
  token.rotation.x=-Math.PI/2;token.position.set(0,.39,0);token.receiveShadow=false;token.castShadow=false;tokenGroup.add(token);
  const icon=new THREE.Mesh(new THREE.PlaneGeometry(1.02,1.02),new THREE.MeshBasicMaterial({map:phaseTexture,transparent:true,side:THREE.DoubleSide,depthWrite:false}));
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
- const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8',a);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});phaseGroup.add(label);
+ const label=makeFlatText(PHASES[i].toUpperCase(),'#e0def8');label.rotation.x=-Math.PI/2;label.position.set(0,.415,.94);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
 }
 const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
