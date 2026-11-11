@@ -31,13 +31,13 @@ The supplied celestial textures are in `public/textures/`:
 - `sun-surface.jpg` — solar surface color
 - `rocket-reference.png` — visual reference only
 
-A separate star-field background image was mentioned for this iteration, but it was not present in the repository root or `public/textures/` when this branch was prepared. The current circular procedural star field remains as a temporary fallback. Once the image is available in the repository, it can be renamed and installed as the background environment.
+The supplied `IMG_8403.jpeg` star field is installed as `public/textures/starfield.jpg` and used as the scene background without altering its brightness or appearance.
 
 ## Future visual direction
 
 - Earth as a distant celestial body, positioned consistently with the Sun/Moon composition
 - Lens flare elements tied to camera visibility and screen-space alignment of the Sun, kept subtle and art-directed
-- Replace the procedural star fallback with the supplied star-field image when available
+- Tune the star-field exposure in context only if play-testing shows it needs adjustment
 
 ## Question bank
 
