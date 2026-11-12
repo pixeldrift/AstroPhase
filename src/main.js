@@ -213,10 +213,10 @@ const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.
  // Shape the atmospheric rim as a soft band: it builds gently outside the disk,
  // peaks just inside the silhouette, then fades back to transparent at the shell edge.
  atmosphereMaterial.onBeforeCompile=shader=>{
-  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
-  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\\nvAtmosphereViewNormal=normalize(normalMatrix*normal);vAtmosphereViewDirection=normalize(-mvPosition.xyz);');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>\\nfloat atmosphereFacing=abs(dot(normalize(vAtmosphereViewNormal),normalize(vAtmosphereViewDirection)));float atmosphereRim=1.0-atmosphereFacing;float rimBuild=smoothstep(0.015,0.30,atmosphereRim);float rimFade=1.0-smoothstep(0.48,0.94,atmosphereRim);diffuseColor.a*=rimBuild*rimFade;`);
+  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
+  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvAtmosphereViewNormal=normalize(normalMatrix*normal);vAtmosphereViewDirection=normalize(-mvPosition.xyz);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>\nfloat atmosphereFacing=abs(dot(normalize(vAtmosphereViewNormal),normalize(vAtmosphereViewDirection)));float atmosphereRim=1.0-atmosphereFacing;float rimBuild=smoothstep(0.015,0.30,atmosphereRim);float rimFade=1.0-smoothstep(0.48,0.94,atmosphereRim);diffuseColor.a*=rimBuild*rimFade;`);
  };
  atmosphereMaterial.customProgramCacheKey=()=>'soft-atmosphere-rim-v1';
  const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.47,128,96),atmosphereMaterial);earthAtmosphere.renderOrder=3;
