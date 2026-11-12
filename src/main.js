@@ -296,6 +296,32 @@ const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',31,1.0);sunGlowOuter.po
 const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',19.5,1.0);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(19.5,4.25,60);sunGroup.scale.setScalar(2);
 
+// Live lighting controls for visual tuning.
+const sunBrightnessControl=document.querySelector('#sun-brightness');
+const sunBrightnessValue=document.querySelector('#sun-brightness-value');
+const moonAmbientControl=document.querySelector('#moon-ambient');
+const moonAmbientValue=document.querySelector('#moon-ambient-value');
+const initialSunBrightness=3.4;
+function setSunBrightness(value){
+ const brightness=Number(value);
+ const ratio=brightness/initialSunBrightness;
+ sunLight.intensity=brightness;
+ sunMaterial.emissiveIntensity=18*ratio;
+ sunGlowOuter.material.opacity=ratio;
+ sunGlowInner.material.opacity=ratio;
+ sunBrightnessValue.textContent=brightness.toFixed(2);
+}
+function setMoonAmbient(value){
+ const intensity=Number(value);
+ moonAmbient.intensity=intensity;
+ moonAmbientValue.textContent=intensity.toFixed(3);
+}
+sunBrightnessControl.addEventListener('input',event=>setSunBrightness(event.target.value));
+moonAmbientControl.addEventListener('input',event=>setMoonAmbient(event.target.value));
+setSunBrightness(sunBrightnessControl.value);
+setMoonAmbient(moonAmbientControl.value);
+
+
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
  const body=addMesh(new THREE.CylinderGeometry(.2,.25,.88,18),bodyMat,g);body.position.y=.58;
