@@ -48,7 +48,7 @@ sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set
 sunLight.shadow.mapSize.set(2048,2048);
 sunLight.shadow.camera.left=-28;sunLight.shadow.camera.right=28;sunLight.shadow.camera.top=28;sunLight.shadow.camera.bottom=-28;
 sunLight.shadow.camera.near=.1;sunLight.shadow.camera.far=120;sunLight.shadow.camera.updateProjectionMatrix();
-sunLight.shadow.bias=-.00012;sunLight.shadow.normalBias=.025;sunLight.shadow.radius=2;sunLight.shadow.autoUpdate=true;
+sunLight.shadow.bias=-.00012;sunLight.shadow.normalBias=.025;sunLight.shadow.radius=5;sunLight.shadow.autoUpdate=true;
 scene.add(sunLight);scene.add(sunLight.target);
 const fillLight=new THREE.PointLight(0x718ac2,62,48);fillLight.position.set(12,9,12);scene.add(fillLight);
 
@@ -210,7 +210,15 @@ const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.
  applyViewFresnel(earthCloudMaterial,.48,2.2);
  const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(1);
  const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.52,side:THREE.BackSide,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:false});
- applyViewFresnel(atmosphereMaterial,.015,1.55);
+ // Shape the atmospheric rim as a soft band: it builds gently outside the disk,
+ // peaks just inside the silhouette, then fades back to transparent at the shell edge.
+ atmosphereMaterial.onBeforeCompile=shader=>{
+  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
+  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvAtmosphereViewNormal=normalize(normalMatrix*normal);vAtmosphereViewDirection=normalize(-mvPosition.xyz);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>\nfloat atmosphereFacing=abs(dot(normalize(vAtmosphereViewNormal),normalize(vAtmosphereViewDirection)));float atmosphereRim=1.0-atmosphereFacing;float rimBuild=smoothstep(0.015,0.30,atmosphereRim);float rimFade=1.0-smoothstep(0.48,0.94,atmosphereRim);diffuseColor.a*=rimBuild*rimFade;`);
+ };
+ atmosphereMaterial.customProgramCacheKey=()=>'soft-atmosphere-rim-v1';
  const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.47,128,96),atmosphereMaterial);earthAtmosphere.renderOrder=3;
  earthGroup.add(earthAtmosphere);earthAtmosphere.layers.set(1);
  Promise.all([
