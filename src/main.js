@@ -24,7 +24,8 @@ const starfieldTexture=new THREE.TextureLoader().load('/textures/starfield.jpg')
 starfieldTexture.colorSpace=THREE.SRGBColorSpace;
 starfieldTexture.mapping=THREE.EquirectangularReflectionMapping;
 scene.background=starfieldTexture;
-scene.fog=new THREE.FogExp2(0x080d1c,.012);
+// Keep scene brightness stable while zooming; dense exponential fog was darkening distant objects.
+scene.fog=new THREE.FogExp2(0x080d1c,.003);
 const camera=new THREE.PerspectiveCamera(38,1,.1,160);
 camera.position.set(0,38,64);
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
