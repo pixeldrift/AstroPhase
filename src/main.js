@@ -41,8 +41,8 @@ composer.addPass(bloomPass);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=17;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
-const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05);boardAmbient.layers.set(0);scene.add(boardAmbient);
-const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.065);moonAmbient.layers.set(1);scene.add(moonAmbient);
+const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.65);boardAmbient.layers.set(0);scene.add(boardAmbient);
+const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.025);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
@@ -177,8 +177,7 @@ for(let i=0;i<8;i++){
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
  const label=makeFlatText(PHASES[i].toUpperCase(),'#ffffff');label.rotation.x=-Math.PI/2;label.position.set(0,.415,1.25);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
-}
-const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
+}const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
 
  // Earth sits at the center of the Moon's orbital path, using the supplied map set.
  const earthGroup=new THREE.Group();earthGroup.position.set(0,4.25,0);scene.add(earthGroup);
@@ -309,6 +308,15 @@ function placeRockets(){
  });
 }
 placeRockets();
+// Keep the board in its own lighting/shadow domain. Its meshes remain on layer 0,
+// illuminated by the brighter board fill, and cannot cast shadows onto the Moon.
+board.traverse(object=>{
+ if(object.isMesh){
+  object.layers.set(0);
+  object.castShadow=false;
+  object.receiveShadow=false;
+ }
+});
 function updateRocketPositions(){placeRockets()}
 const moonOrbitRadius=moon.position.distanceTo(earthGroup.position);
 const orbitDots=addMesh(new THREE.TorusGeometry(moonOrbitRadius,.025,6,240),new THREE.MeshBasicMaterial({color:0x7c8bb5,transparent:true,opacity:.78,toneMapped:false,depthWrite:false}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.copy(earthGroup.position);orbitDots.castShadow=false;orbitDots.receiveShadow=false;
@@ -357,8 +365,7 @@ document.querySelector('#view-earth').addEventListener('click',()=>{
  const towardMoon=earthLocal.clone().negate().normalize();
  // Place the camera just above Earth's near-side horizon, looking outward toward the full Moon.
  const earthViewPosition=earthLocal.clone().addScaledVector(towardMoon,7.0).add(new THREE.Vector3(0,5.5,0));
- transitionCamera(earthViewPosition,1400);
-});
+ transitionCamera(earthViewPosition,1400);});
 function renderHud(){
  const p=PLAYERS[state.current];
  document.querySelector('#current-player').textContent=p.name;
@@ -537,8 +544,7 @@ function spinTurn(isBonus=false){
  document.querySelector('#move-status').textContent='The spinner is slowing down…';
  setTimeout(()=>{
   const result=slots[outcome];state.roll=result==='EVENT'?null:result;
-  if(result==='EVENT'){state.pending=false;showEvent(drawEvent());return}
-  moveAndQuestion(result);
+  if(result==='EVENT'){state.pending=false;showEvent(drawEvent());return}  moveAndQuestion(result);
  },1550);
 }
 document.querySelector('#roll-button').addEventListener('click',()=>spinTurn(false));
