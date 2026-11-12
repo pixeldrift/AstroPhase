@@ -253,10 +253,10 @@ function makeSoftGlow(cssColor,size,opacity){
  ctx.fillStyle=g;ctx.fillRect(0,0,512,512);
  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,toneMapped:false}));
- sprite.scale.set(size,size,1);sprite.renderOrder=10;sprite.material.depthTest=false;return sprite;
+ sprite.scale.set(size,size,1);sprite.renderOrder=2;return sprite;
 }
-const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=2;earthMoonOrbit.add(moonGlowOuter);
-const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=3;earthMoonOrbit.add(moonGlowInner);
+const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=10;moonGlowOuter.material.depthTest=false;earthMoonOrbit.add(moonGlowOuter);
+const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=11;moonGlowInner.material.depthTest=false;earthMoonOrbit.add(moonGlowInner);
 
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
@@ -341,7 +341,7 @@ document.querySelector('#view-earth').addEventListener('click',()=>{
  const earthLocal=moon.worldToLocal(earthWorldPosition.clone());
  const towardMoon=earthLocal.clone().negate().normalize();
  // Place the camera just above Earth's near-side horizon, looking outward toward the full Moon.
- const earthViewPosition=earthLocal.clone().addScaledVector(towardMoon,4.65).add(new THREE.Vector3(0,.9,0));
+ const earthViewPosition=earthLocal.clone().addScaledVector(towardMoon,3.35).add(new THREE.Vector3(0,.25,0));
  transitionCamera(earthViewPosition,1400);
 });
 function renderHud(){
