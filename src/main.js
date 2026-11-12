@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import './style.css';
 
 const PHASES = [
@@ -36,13 +37,21 @@ renderer.toneMappingExposure=1.12;
 sceneRoot.appendChild(renderer.domElement);
 const composer=new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene,camera));
-const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),.36,.56,.84);
-composer.addPass(bloomPass);
+const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),1.0,.56,.84);
+const bloomComposer=new EffectComposer(renderer);
+bloomComposer.renderToScreen=false;
+bloomComposer.addPass(new RenderPass(scene,camera));
+bloomComposer.addPass(bloomPass);
+const bloomCompositePass=new ShaderPass(new THREE.ShaderMaterial({
+ uniforms:{baseTexture:{value:null},bloomTexture:{value:bloomComposer.renderTarget2.texture}},
+ vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+ fragmentShader:'uniform sampler2D baseTexture;uniform sampler2D bloomTexture;varying vec2 vUv;void main(){gl_FragColor=texture2D(baseTexture,vUv)+texture2D(bloomTexture,vUv);}'
+}),'baseTexture');
+composer.addPass(bloomCompositePass);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=17;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.65);boardAmbient.layers.set(0);scene.add(boardAmbient);
-const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.008);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
@@ -50,7 +59,6 @@ sunLight.shadow.camera.left=-28;sunLight.shadow.camera.right=28;sunLight.shadow.
 sunLight.shadow.camera.near=.1;sunLight.shadow.camera.far=120;sunLight.shadow.camera.updateProjectionMatrix();
 sunLight.shadow.bias=-.00012;sunLight.shadow.normalBias=.025;sunLight.shadow.radius=5;sunLight.shadow.autoUpdate=true;
 scene.add(sunLight);scene.add(sunLight.target);
-const fillLight=new THREE.PointLight(0x718ac2,62,48);fillLight.position.set(12,9,12);scene.add(fillLight);
 
 // Star field is supplied as an equirectangular background texture.
 
@@ -243,13 +251,22 @@ torus(5.05,.07,0x9b8ed5,.37);
 const textureLoader=new THREE.TextureLoader();
 const moonAlbedo=textureLoader.load('/textures/moon-albedo.jpg');moonAlbedo.colorSpace=THREE.SRGBColorSpace;
 const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
-const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.985,metalness:0});
+const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissive:new THREE.Color(0x000000),emissiveIntensity:0,roughness:.985,metalness:0});
+// Remove indirect/ambient illumination from the lunar surface. Only direct sunlight
+// should reveal terrain; the terminator's night side must remain genuinely dark.
+moonMat.onBeforeCompile=shader=>{
+ shader.fragmentShader=shader.fragmentShader.replace(
+  '#include <lights_fragment_end>',
+  '#include <lights_fragment_end>\nreflectedLight.indirectDiffuse=vec3(0.0);'
+ );
+};
+moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=true;moon.receiveShadow=true;
 // The board is fixed to the Moon; its quarter-token axis is aligned with the lunar terminator at the initial Sun direction.
 // Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
 // With the Moon at +X, a half-turn brings the texture's +X face toward Earth (-X).
 moon.add(board);board.position.set(0,-4.25,0);board.rotation.y=Math.PI;
-moon.layers.set(1);camera.layers.enable(1);
+moon.layers.set(1);camera.layers.enable(1);camera.layers.enable(2);
 moon.rotation.y=Math.PI;moon.add(camera);camera.position.set(64,38,19.5);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
 sunLight.intensity=4.6;
 
@@ -282,7 +299,9 @@ const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',10.8,.22);moonGlowOut
 const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',6.2,.16);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=11;moonGlowInner.material.depthTest=true;earthMoonOrbit.add(moonGlowInner);
 
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
-const sunGroup=new THREE.Group();scene.add(sunGroup);
+const BLOOM_LAYER=2;
+const bloomLayer=new THREE.Layers();bloomLayer.set(BLOOM_LAYER);
+const sunGroup=new THREE.Group();sunGroup.layers.set(BLOOM_LAYER);scene.add(sunGroup);
 let sunMaterial;
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
  const image=loaded.image,canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
@@ -291,52 +310,14 @@ const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
  if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.emissiveMap=softenedTexture;sunMaterial.needsUpdate=true;}
 });sunTexture.colorSpace=THREE.SRGBColorSpace;
 sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,emissive:0xffe0ad,emissiveIntensity:18,roughness:1,metalness:0,toneMapped:false});
-const sunBall=addMesh(new THREE.SphereGeometry(2,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',31,1.0);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',19.5,1.0);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
+const sunBall=addMesh(new THREE.SphereGeometry(2,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;sunBall.layers.set(BLOOM_LAYER);
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',31,1.0);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGlowOuter.layers.set(BLOOM_LAYER);sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',19.5,1.0);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGlowInner.layers.set(BLOOM_LAYER);sunGroup.add(sunGlowInner);
 sunGroup.position.set(19.5,4.25,60);sunGroup.scale.setScalar(2);
 
-// Live lighting controls for visual tuning.
-const sunBrightnessControl=document.querySelector('#sun-brightness');
-const sunBrightnessValue=document.querySelector('#sun-brightness-value');
-const moonEmissiveControl=document.querySelector('#moon-emissive');
-const moonEmissiveValue=document.querySelector('#moon-emissive-value');
-const moonGlowControl=document.querySelector('#moon-glow');
-const bloomStrengthControl=document.querySelector('#bloom-strength');
-const bloomStrengthValue=document.querySelector('#bloom-strength-value');
-const initialSunBrightness=7;
-function setSunBrightness(value){
- const brightness=Number(value);
- const ratio=brightness/initialSunBrightness;
- sunLight.intensity=brightness;
- sunMaterial.emissiveIntensity=18*ratio;
- sunGlowOuter.material.opacity=ratio;
- sunGlowInner.material.opacity=ratio;
- sunBrightnessValue.textContent=brightness.toFixed(2);
-}
-function setMoonEmissive(value){
- const intensity=Number(value);
- moonMat.emissiveIntensity=intensity;
- moonEmissiveValue.textContent=intensity.toFixed(3);
-}
-function setMoonGlow(enabled){
- moonGlowOuter.visible=enabled;
- moonGlowInner.visible=enabled;
-}
-function setBloomStrength(value){
- const strength=Number(value);
- bloomPass.strength=strength;
- bloomStrengthValue.textContent=strength.toFixed(2);
-}
-sunBrightnessControl.addEventListener('input',event=>setSunBrightness(event.target.value));
-moonEmissiveControl.addEventListener('input',event=>setMoonEmissive(event.target.value));
-moonGlowControl.addEventListener('change',event=>setMoonGlow(event.target.checked));
-bloomStrengthControl.addEventListener('input',event=>setBloomStrength(event.target.value));
-setSunBrightness(sunBrightnessControl.value);
-setMoonEmissive(moonEmissiveControl.value);
-setMoonGlow(moonGlowControl.checked);
-setBloomStrength(bloomStrengthControl.value);
-
+// Fixed visual baseline: full sun brightness and sun-only bloom.
+sunLight.intensity=7;
+sunMaterial.emissiveIntensity=18;
 
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
@@ -371,7 +352,7 @@ board.traverse(object=>{
 function updateRocketPositions(){placeRockets()}
 const moonOrbitRadius=moon.position.distanceTo(earthGroup.position);
 const orbitDots=addMesh(new THREE.TorusGeometry(moonOrbitRadius,.025,6,240),new THREE.MeshBasicMaterial({color:0x7c8bb5,transparent:true,opacity:.78,toneMapped:false,depthWrite:false}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.copy(earthGroup.position);orbitDots.castShadow=false;orbitDots.receiveShadow=false;
-function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
+function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h);bloomComposer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
 const moonWorldPosition=new THREE.Vector3();
 const sunWorldPosition=new THREE.Vector3(),earthWorldPosition=new THREE.Vector3();
@@ -380,6 +361,34 @@ let cameraTransition=null;
 function transitionCamera(localPosition,duration=1200){
  cameraTransition={from:camera.position.clone(),to:localPosition.clone(),startedAt:performance.now(),duration};
  controls.enabled=false;
+}
+const darkMaterialCache=new Map();
+function getDarkMaterial(original){
+ if(Array.isArray(original))return original.map(getDarkMaterial);
+ if(!original)return original;
+ if(!darkMaterialCache.has(original.uuid)){
+  const dark=original.clone();
+  if(dark.color)dark.color.setRGB(0,0,0);
+  if(dark.emissive)dark.emissive.setRGB(0,0,0);
+  if('emissiveIntensity' in dark)dark.emissiveIntensity=0;
+  dark.emissiveMap=null;
+  darkMaterialCache.set(original.uuid,dark);
+ }
+ return darkMaterialCache.get(original.uuid);
+}
+function renderSelectiveBloom(){
+ const originalBackground=scene.background,restore=[];
+ scene.background=new THREE.Color(0x000000);
+ scene.traverse(object=>{
+  if((object.isMesh||object.isSprite)&&!bloomLayer.test(object.layers)){
+   restore.push([object,object.material]);
+   object.material=getDarkMaterial(object.material);
+  }
+ });
+ bloomComposer.render();
+ for(const [object,material] of restore)object.material=material;
+ scene.background=originalBackground;
+ composer.render();
 }
 function animate(){
  requestAnimationFrame(animate);
@@ -404,7 +413,7 @@ function animate(){
  if(earthMaterial.userData.shader){earthMaterial.userData.shader.uniforms.uEarthSunDirection.value.copy(sunWorldPosition).sub(earthWorldPosition).normalize()}
  earthClouds.rotation.y=performance.now()*.000008;
  rocketMeshes.forEach((r,i)=>{r.userData.flame.scale.y=.8+Math.sin(performance.now()*.012+i)*.22});
- composer.render();
+ renderSelectiveBloom();
 }
 animate();
 

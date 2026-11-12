@@ -19,28 +19,6 @@
         <section class="board-stage" aria-label="Interactive 3D game board">
           <div class="stage-caption"><span class="stage-hint">DRAG TO ORBIT · SCROLL OR PINCH TO ZOOM</span></div>
           <div id="scene"></div>
-          <div class="lighting-panel" aria-label="Lighting controls">
-            <div class="lighting-panel-title">LIGHTING</div>
-            <div class="lighting-control">
-              <label for="sun-brightness">SUN BRIGHTNESS</label>
-              <output id="sun-brightness-value" for="sun-brightness">7.00</output>
-              <input id="sun-brightness" class="lighting-range sun-range" type="range" min="0" max="7" step="0.05" value="7" aria-label="Sun brightness">
-            </div>
-            <div class="lighting-control">
-              <label for="moon-emissive">MOON EMISSIVE</label>
-              <output id="moon-emissive-value" for="moon-emissive">0.008</output>
-              <input id="moon-emissive" class="lighting-range moon-range" type="range" min="0" max="0.15" step="0.001" value="0.008" aria-label="Moon emissive intensity">
-            </div>
-            <label class="glow-toggle" for="moon-glow">
-              <input id="moon-glow" type="checkbox" checked>
-              <span>MOON GLOW</span>
-            </label>
-            <div class="lighting-control">
-              <label for="bloom-strength">BLOOM</label>
-              <output id="bloom-strength-value" for="bloom-strength">0.36</output>
-              <input id="bloom-strength" class="lighting-range bloom-range" type="range" min="0" max="1.2" step="0.01" value="0.36" aria-label="Bloom strength">
-            </div>
-          </div>
           <div class="board-controls">
             <button class="control-pill" id="view-top">TOP VIEW</button>
             <button class="control-pill" id="view-earth">EARTH VIEW</button>
