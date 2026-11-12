@@ -177,7 +177,8 @@ for(let i=0;i<8;i++){
  icon.rotation.x=-Math.PI/2;icon.position.set(0,.405,0);icon.castShadow=false;icon.receiveShadow=false;tokenGroup.add(icon);
  const label=makeFlatText(PHASES[i].toUpperCase(),'#ffffff');label.rotation.x=-Math.PI/2;label.position.set(0,.415,1.25);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
-}const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
+}
+const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
 
  // Earth sits at the center of the Moon's orbital path, using the supplied map set.
  const earthGroup=new THREE.Group();earthGroup.position.set(0,4.25,0);scene.add(earthGroup);
@@ -365,7 +366,8 @@ document.querySelector('#view-earth').addEventListener('click',()=>{
  const towardMoon=earthLocal.clone().negate().normalize();
  // Place the camera just above Earth's near-side horizon, looking outward toward the full Moon.
  const earthViewPosition=earthLocal.clone().addScaledVector(towardMoon,7.0).add(new THREE.Vector3(0,5.5,0));
- transitionCamera(earthViewPosition,1400);});
+ transitionCamera(earthViewPosition,1400);
+});
 function renderHud(){
  const p=PLAYERS[state.current];
  document.querySelector('#current-player').textContent=p.name;
@@ -544,7 +546,8 @@ function spinTurn(isBonus=false){
  document.querySelector('#move-status').textContent='The spinner is slowing down…';
  setTimeout(()=>{
   const result=slots[outcome];state.roll=result==='EVENT'?null:result;
-  if(result==='EVENT'){state.pending=false;showEvent(drawEvent());return}  moveAndQuestion(result);
+  if(result==='EVENT'){state.pending=false;showEvent(drawEvent());return}
+  moveAndQuestion(result);
  },1550);
 }
 document.querySelector('#roll-button').addEventListener('click',()=>spinTurn(false));
