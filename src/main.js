@@ -52,6 +52,7 @@ const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=17;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.65);boardAmbient.layers.set(0);scene.add(boardAmbient);
+ const moonAmbient=new THREE.HemisphereLight(0x9bb9ff,0x171d35,.55);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
@@ -59,7 +60,7 @@ sunLight.shadow.camera.left=-28;sunLight.shadow.camera.right=28;sunLight.shadow.
 sunLight.shadow.camera.near=.1;sunLight.shadow.camera.far=120;sunLight.shadow.camera.updateProjectionMatrix();
 sunLight.shadow.bias=-.00012;sunLight.shadow.normalBias=.025;sunLight.shadow.radius=5;sunLight.shadow.autoUpdate=true;
 scene.add(sunLight);scene.add(sunLight.target);
-const fillLight=new THREE.PointLight(0x718ac2,900,0,2);fillLight.layers.enable(0);fillLight.layers.enable(1);scene.add(fillLight);
+const fillLight=new THREE.PointLight(0x718ac2,450,0,2);fillLight.layers.enable(0);fillLight.layers.enable(1);scene.add(fillLight);
 
 // Star field is supplied as an equirectangular background texture.
 
@@ -258,7 +259,7 @@ const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissive:new THREE.
 moonMat.onBeforeCompile=shader=>{
  shader.fragmentShader=shader.fragmentShader.replace(
   '#include <lights_fragment_end>',
-  '#include <lights_fragment_end>\nreflectedLight.indirectDiffuse=vec3(0.0);'
+  '#include <lights_fragment_end>\nreflectedLight.indirectDiffuse*=0.35;'
  );
 };
 moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
