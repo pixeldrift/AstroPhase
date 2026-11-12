@@ -53,6 +53,8 @@ const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=17;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.65);boardAmbient.layers.set(0);scene.add(boardAmbient);
+// Celestial bodies share a gentle nondirectional baseline; the board keeps its own hemisphere lighting.
+const celestialAmbient=new THREE.AmbientLight(0x8fa8d8,.32);celestialAmbient.layers.set(1);scene.add(celestialAmbient);
  
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set(1);
@@ -225,7 +227,7 @@ for(let i=0;i<8;i++){
   };
   material.customProgramCacheKey=()=> 'view-fresnel-'+centerVisibility+'-'+power;
  }
- const earthCloudMaterial=new THREE.MeshBasicMaterial({color:0xffffff,map:earthCloudTexture,alphaMap:earthCloudAlphaTexture,transparent:false,opacity:.9,depthWrite:false,depthTest:true,side:THREE.FrontSide});
+ const earthCloudMaterial=new THREE.MeshPhongMaterial({color:0xffffff,map:earthCloudTexture,alphaMap:earthCloudAlphaTexture,transparent:true,opacity:.9,depthWrite:false,depthTest:true,side:THREE.FrontSide,specular:new THREE.Color(0x202838),shininess:8});
  applyViewFresnel(earthCloudMaterial,.72,1.8);
  const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(1);
  const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.52,side:THREE.BackSide,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:false});
@@ -255,15 +257,7 @@ const textureLoader=new THREE.TextureLoader();
 const moonAlbedo=textureLoader.load('/textures/moon-albedo.jpg');moonAlbedo.colorSpace=THREE.SRGBColorSpace;
 const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
 const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissive:new THREE.Color(0x000000),emissiveIntensity:0,roughness:.985,metalness:0});
-// Remove indirect/ambient illumination from the lunar surface. Only direct sunlight
-// should reveal terrain; the terminator's night side must remain genuinely dark.
-moonMat.onBeforeCompile=shader=>{
- shader.fragmentShader=shader.fragmentShader.replace(
-  '#include <lights_fragment_end>',
-  '#include <lights_fragment_end>\nreflectedLight.indirectDiffuse=vec3(0.0);'
- );
-};
-moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
+// StandardMaterial now receives the layer-1 ambient and direct sunlight normally.
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=true;moon.receiveShadow=true;
 // Place the broad fill at Earth's position, at the center of the Moon's orbit, so illumination stays consistent as the Moon moves.
 // The fill source is repositioned each frame above the Moon's anti-solar side.
