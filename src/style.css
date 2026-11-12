@@ -10,5 +10,5 @@
  -webkit-touch-callout:none;
 }
 #scene canvas{touch-action:none}
-.board-controls{left:24px;right:auto;bottom:24px;transform:none}
+.board-controls{left:24px;right:auto;bottom:24px;transform:none;gap:6px}
 .stage-caption{left:24px;right:24px;justify-content:flex-end}
