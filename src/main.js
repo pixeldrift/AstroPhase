@@ -278,8 +278,8 @@ function makeSoftGlow(cssColor,size,opacity){
  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,opacity:1,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,toneMapped:false}));
  sprite.scale.set(size,size,1);sprite.renderOrder=2;return sprite;
 }
-const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',12.4,.42);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=10;moonGlowOuter.material.depthTest=true;earthMoonOrbit.add(moonGlowOuter);
-const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',7.6,.34);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=11;moonGlowInner.material.depthTest=true;earthMoonOrbit.add(moonGlowInner);
+const moonGlowOuter=makeSoftGlow('rgba(143,170,255,COLOR)',10.8,.22);moonGlowOuter.position.copy(moon.position);moonGlowOuter.renderOrder=10;moonGlowOuter.material.depthTest=true;earthMoonOrbit.add(moonGlowOuter);
+const moonGlowInner=makeSoftGlow('rgba(170,190,255,COLOR)',6.2,.16);moonGlowInner.position.copy(moon.position);moonGlowInner.renderOrder=11;moonGlowInner.material.depthTest=true;earthMoonOrbit.add(moonGlowInner);
 
 // Sun marker, using the supplied solar texture with a soft emissive presentation.
 const sunGroup=new THREE.Group();scene.add(sunGroup);
@@ -301,7 +301,7 @@ const sunBrightnessControl=document.querySelector('#sun-brightness');
 const sunBrightnessValue=document.querySelector('#sun-brightness-value');
 const moonAmbientControl=document.querySelector('#moon-ambient');
 const moonAmbientValue=document.querySelector('#moon-ambient-value');
-const initialSunBrightness=3.4;
+const initialSunBrightness=7;
 function setSunBrightness(value){
  const brightness=Number(value);
  const ratio=brightness/initialSunBrightness;
@@ -314,6 +314,7 @@ function setSunBrightness(value){
 function setMoonAmbient(value){
  const intensity=Number(value);
  moonAmbient.intensity=intensity;
+ moonMat.emissiveIntensity=intensity;
  moonAmbientValue.textContent=intensity.toFixed(3);
 }
 sunBrightnessControl.addEventListener('input',event=>setSunBrightness(event.target.value));
