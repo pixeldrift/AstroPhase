@@ -52,12 +52,12 @@ composer.addPass(bloomCompositePass);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=17;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
-const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.65);boardAmbient.layers.set(0);scene.add(boardAmbient);
+const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,3.5);boardAmbient.layers.set(0);scene.add(boardAmbient);
 // Celestial bodies share a gentle nondirectional baseline; the board keeps its own hemisphere lighting.
-const celestialAmbient=new THREE.AmbientLight(0x8fa8d8,.32);celestialAmbient.layers.set(1);scene.add(celestialAmbient);
+const celestialAmbient=new THREE.AmbientLight(0x8fa8d8,.32);celestialAmbient.layers.set(1);scene.add(celestialAmbient);\n// Earth has its own brighter ambient baseline so the continents remain legible without lifting the Moon.\nconst earthAmbient=new THREE.AmbientLight(0xffffff,.8);earthAmbient.layers.set(2);scene.add(earthAmbient);
  
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
-sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set(1);
+sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.enable(1);sunLight.layers.enable(2);
 sunLight.shadow.mapSize.set(2048,2048);
 sunLight.shadow.camera.left=-28;sunLight.shadow.camera.right=28;sunLight.shadow.camera.top=28;sunLight.shadow.camera.bottom=-28;
 sunLight.shadow.camera.near=.1;sunLight.shadow.camera.far=120;sunLight.shadow.camera.updateProjectionMatrix();
@@ -206,16 +206,16 @@ for(let i=0;i<8;i++){
  const earthNightTexture=new THREE.TextureLoader().load('/textures/earth-night.jpg');earthNightTexture.colorSpace=THREE.SRGBColorSpace;earthNightTexture.flipY=true;
  const earthCloudTexture=new THREE.TextureLoader().load('/textures/earth-clouds.jpg');earthCloudTexture.colorSpace=THREE.SRGBColorSpace;earthCloudTexture.flipY=true;
  const earthCloudAlphaTexture=earthCloudTexture.clone();earthCloudAlphaTexture.colorSpace=THREE.NoColorSpace;earthCloudAlphaTexture.needsUpdate=true;
- const earthMaterial=new THREE.MeshPhongMaterial({map:earthDayTexture,emissive:0xffffff,emissiveMap:earthNightTexture,emissiveIntensity:.72,specular:new THREE.Color(0x4a6a86),shininess:22});
+ const earthMaterial=new THREE.MeshPhongMaterial({map:earthDayTexture,emissive:0xffffff,emissiveMap:earthNightTexture,emissiveIntensity:.72,specular:new THREE.Color(0x101820),shininess:8});
  earthMaterial.onBeforeCompile=shader=>{
   shader.uniforms.uEarthSunDirection={value:new THREE.Vector3(0,0,1)};
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vEarthWorldNormal;');
   shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvEarthWorldNormal = normalize(mat3(modelMatrix) * normal);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 uEarthSunDirection;\nvarying vec3 vEarthWorldNormal;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nfloat earthDaylight = smoothstep(-0.12, 0.18, dot(normalize(vEarthWorldNormal), normalize(uEarthSunDirection)));\ntotalEmissiveRadiance *= (1.0 - earthDaylight);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nfloat earthDaylight = smoothstep(-0.32, 0.38, dot(normalize(vEarthWorldNormal), normalize(uEarthSunDirection)));\ntotalEmissiveRadiance *= (1.0 - earthDaylight);');
   earthMaterial.userData.shader=shader;
  };
- const earth=new THREE.Mesh(new THREE.SphereGeometry(3.35,128,96),earthMaterial);earth.castShadow=true;earth.receiveShadow=true;earthGroup.add(earth);earth.layers.set(1);
+ const earth=new THREE.Mesh(new THREE.SphereGeometry(3.35,128,96),earthMaterial);earth.castShadow=true;earth.receiveShadow=true;earthGroup.add(earth);earth.layers.set(2);
  // Both transparent shells use a view-space Fresnel term. Clouds retain their
  // texture mask across the disk, while their opacity gently increases toward the limb.
  function applyViewFresnel(material,centerVisibility,power){
@@ -227,9 +227,9 @@ for(let i=0;i<8;i++){
   };
   material.customProgramCacheKey=()=> 'view-fresnel-'+centerVisibility+'-'+power;
  }
- const earthCloudMaterial=new THREE.MeshPhongMaterial({color:0xffffff,map:earthCloudTexture,alphaMap:earthCloudAlphaTexture,transparent:true,opacity:.9,depthWrite:false,depthTest:true,side:THREE.FrontSide,specular:new THREE.Color(0x202838),shininess:8});
+ const earthCloudMaterial=new THREE.MeshPhongMaterial({color:0xffffff,alphaMap:earthCloudAlphaTexture,transparent:true,opacity:.9,depthWrite:false,depthTest:true,side:THREE.FrontSide,specular:new THREE.Color(0x101820),shininess:8});
  applyViewFresnel(earthCloudMaterial,.72,1.8);
- const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(1);
+ const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(2);
  const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.52,side:THREE.BackSide,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:false});
  // Shape the atmospheric rim as a soft band: it builds gently outside the disk,
  // peaks just inside the silhouette, then fades back to transparent at the shell edge.
@@ -241,7 +241,7 @@ for(let i=0;i<8;i++){
  };
  atmosphereMaterial.customProgramCacheKey=()=>'soft-atmosphere-rim-v1';
  const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.47,128,96),atmosphereMaterial);earthAtmosphere.renderOrder=3;
- earthGroup.add(earthAtmosphere);earthAtmosphere.layers.set(1);
+ earthGroup.add(earthAtmosphere);earthAtmosphere.layers.set(2);
  Promise.all([
   fetch('/textures/earth-normal.tiff').then(r=>r.arrayBuffer()),
   fetch('/textures/earth-specular.tiff').then(r=>r.arrayBuffer())
