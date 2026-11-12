@@ -264,7 +264,7 @@ moonMat.onBeforeCompile=shader=>{
 moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=true;moon.receiveShadow=true;
 // Place the broad fill at Earth's position, at the center of the Moon's orbit, so illumination stays consistent as the Moon moves.
-fillLight.position.set(0,4.25,0);
+// The fill source is repositioned each frame above the Moon's anti-solar side.
 // The board is fixed to the Moon; its quarter-token axis is aligned with the lunar terminator at the initial Sun direction.
 // Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
 // With the Moon at +X, a half-turn brings the texture's +X face toward Earth (-X).
@@ -359,6 +359,7 @@ function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||
 new ResizeObserver(resize).observe(sceneRoot);resize();
 const moonWorldPosition=new THREE.Vector3();
 const sunWorldPosition=new THREE.Vector3(),earthWorldPosition=new THREE.Vector3();
+const fillDarkSideDirection=new THREE.Vector3(),fillHeightOffset=new THREE.Vector3(0,10,0);
 const moonWorldQuaternion=new THREE.Quaternion(),sunDirectionInMoonSpace=new THREE.Vector3();
 let cameraTransition=null;
 function transitionCamera(localPosition,duration=1200){
@@ -405,6 +406,9 @@ function animate(){
   if(progress>=1){camera.position.copy(cameraTransition.to);cameraTransition=null;controls.target.set(0,0,0);controls.enabled=true;}
  }else controls.update();
  moon.getWorldPosition(moonWorldPosition);
+ // Keep the blue fill above the lunar surface, on the side facing away from the Sun.
+ fillDarkSideDirection.copy(moonWorldPosition).sub(sunWorldPosition).normalize();
+ fillLight.position.copy(moonWorldPosition).addScaledVector(fillDarkSideDirection,8).add(fillHeightOffset);
  moon.getWorldQuaternion(moonWorldQuaternion);
  sunDirectionInMoonSpace.copy(sunWorldPosition).sub(moonWorldPosition).normalize().applyQuaternion(moonWorldQuaternion.invert());
  board.rotation.y=Math.atan2(sunDirectionInMoonSpace.x,sunDirectionInMoonSpace.z)-Math.PI;
