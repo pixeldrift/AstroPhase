@@ -27,16 +27,37 @@
 .lighting-control{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%}
 .lighting-control label{font-size:7px;letter-spacing:.8px;font-weight:700;color:#b8c1d7;white-space:nowrap}
 .lighting-control output{font:600 12px "Space Grotesk",sans-serif;color:#f3e2b7;font-variant-numeric:tabular-nums}
+/* Use a standard horizontal range input rotated into a vertical control.
+   The non-standard slider-vertical appearance is unreliable on iOS Safari and
+   can reset the thumb to zero during touch interaction. */
 .lighting-range{
- width:142px;height:18px;margin:58px 0;
- writing-mode:vertical-lr;direction:rtl;
- appearance:slider-vertical;-webkit-appearance:slider-vertical;
- accent-color:#e8bd72;cursor:pointer;touch-action:pan-y;
+ width:142px;height:24px;margin:58px 0;
+ padding:0;border:0;border-radius:0;
+ transform:rotate(-90deg);transform-origin:center;
+ appearance:none;-webkit-appearance:none;
+ background:transparent;cursor:pointer;touch-action:none;
 }
-.moon-range{accent-color:#a99aff}
+.lighting-range::-webkit-slider-runnable-track{
+ height:5px;border-radius:5px;background:rgba(177,192,231,.3);
+}
+.lighting-range::-webkit-slider-thumb{
+ width:18px;height:18px;margin-top:-6.5px;
+ border:2px solid #fff;border-radius:50%;
+ background:#e8bd72;box-shadow:0 1px 7px rgba(0,0,0,.4);
+ appearance:none;-webkit-appearance:none;
+}
+.lighting-range::-moz-range-track{
+ height:5px;border-radius:5px;background:rgba(177,192,231,.3);
+}
+.lighting-range::-moz-range-thumb{
+ width:14px;height:14px;border:2px solid #fff;border-radius:50%;
+ background:#e8bd72;box-shadow:0 1px 7px rgba(0,0,0,.4);
+}
+.moon-range::-webkit-slider-thumb{background:#a99aff}
+.moon-range::-moz-range-thumb{background:#a99aff}
 .lighting-range:focus-visible{outline:2px solid #d7c8ff;outline-offset:5px;border-radius:8px}
 @media(max-width:560px){
  .lighting-panel{right:9px;width:91px;padding:10px 6px 12px;gap:12px}
- .lighting-range{height:18px;width:120px;margin:48px 0}
+ .lighting-range{width:120px;height:24px;margin:48px 0}
  .lighting-control label{font-size:6px}
 }
