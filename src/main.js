@@ -42,7 +42,7 @@ const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.055;controls.minDistance=17;controls.maxDistance=90;
 controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,1.2,0);
 const boardAmbient=new THREE.HemisphereLight(0xb8c9ee,0x25213a,2.05);boardAmbient.layers.set(0);scene.add(boardAmbient);
-const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.08);moonAmbient.layers.set(1);scene.add(moonAmbient);
+const moonAmbient=new THREE.HemisphereLight(0x596785,0x050812,.045);moonAmbient.layers.set(1);scene.add(moonAmbient);
 const sunLight=new THREE.DirectionalLight(0xffe4b0,3.4);
 sunLight.position.set(19.5,4.25,60);sunLight.castShadow=true;sunLight.layers.set(1);
 sunLight.shadow.mapSize.set(2048,2048);
@@ -195,16 +195,23 @@ const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.
   earthMaterial.userData.shader=shader;
  };
  const earth=new THREE.Mesh(new THREE.SphereGeometry(3.35,128,96),earthMaterial);earth.castShadow=true;earth.receiveShadow=true;earthGroup.add(earth);earth.layers.set(1);
- const earthCloudMaterial=new THREE.MeshPhongMaterial({map:earthCloudTexture,alphaMap:earthCloudTexture,transparent:true,opacity:.62,depthWrite:false,depthTest:true,side:THREE.FrontSide});
- const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.435,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(1);
- const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.38,side:THREE.BackSide,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:false});
- atmosphereMaterial.onBeforeCompile=shader=>{
-  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
-  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvAtmosphereViewNormal=normalize(normalMatrix*normal);vAtmosphereViewDirection=normalize(-mvPosition.xyz);');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vAtmosphereViewNormal;varying vec3 vAtmosphereViewDirection;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat atmosphereFacing=abs(dot(normalize(vAtmosphereViewNormal),normalize(vAtmosphereViewDirection)));float atmosphereRim=1.0-smoothstep(0.0,0.92,atmosphereFacing);diffuseColor.a*=pow(atmosphereRim,1.65);');
- };
- const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.56,128,96),atmosphereMaterial);earthAtmosphere.renderOrder=3;
+ // Both transparent shells use a view-space Fresnel term. Clouds retain their
+ // texture mask across the disk, while their opacity gently increases toward the limb.
+ function applyViewFresnel(material,centerVisibility,power){
+  material.onBeforeCompile=shader=>{
+   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vShellViewNormal;varying vec3 vShellViewDirection;');
+   shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvShellViewNormal=normalize(normalMatrix*normal);vShellViewDirection=normalize(-mvPosition.xyz);');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vShellViewNormal;varying vec3 vShellViewDirection;');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>','#include <alphamap_fragment>\nfloat shellFacing=abs(dot(normalize(vShellViewNormal),normalize(vShellViewDirection)));float shellFresnel=pow(1.0-shellFacing,${power.toFixed(2)});diffuseColor.a*=mix(${centerVisibility.toFixed(2)},1.0,shellFresnel);');
+  };
+  material.customProgramCacheKey=()=> 'view-fresnel-'+centerVisibility+'-'+power;
+ }
+ const earthCloudMaterial=new THREE.MeshPhongMaterial({map:earthCloudTexture,alphaMap:earthCloudTexture,transparent:true,opacity:.68,depthWrite:false,depthTest:true,side:THREE.FrontSide});
+ applyViewFresnel(earthCloudMaterial,.48,2.2);
+ const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(1);
+ const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.52,side:THREE.BackSide,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:false});
+ applyViewFresnel(atmosphereMaterial,.015,1.55);
+ const earthAtmosphere=new THREE.Mesh(new THREE.SphereGeometry(3.47,128,96),atmosphereMaterial);earthAtmosphere.renderOrder=3;
  earthGroup.add(earthAtmosphere);earthAtmosphere.layers.set(1);
  Promise.all([
   fetch('/textures/earth-normal.tiff').then(r=>r.arrayBuffer()),
@@ -228,7 +235,7 @@ const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4
 moon.add(board);board.position.set(0,-4.25,0);board.rotation.y=Math.PI;
 moon.layers.set(1);camera.layers.enable(1);
 moon.rotation.y=Math.PI;moon.add(camera);camera.position.set(64,38,19.5);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
-sunLight.intensity=6.5;
+sunLight.intensity=3.0;
 
 fetch('/textures/moon-displacement.tiff').then(r=>{if(!r.ok)throw new Error('Moon displacement map unavailable');return r.arrayBuffer()}).then(buffer=>{
  const ifds=UTIF.decode(buffer);if(!ifds.length)throw new Error('Could not decode TIFF displacement map');UTIF.decodeImage(buffer,ifds[0]);
@@ -263,14 +270,14 @@ const sunGroup=new THREE.Group();scene.add(sunGroup);
 let sunMaterial;
 const sunTexture=textureLoader.load('/textures/sun-surface.jpg',loaded=>{
  const image=loaded.image,canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
- const ctx=canvas.getContext('2d');ctx.filter='brightness(1.08) contrast(.84)';ctx.drawImage(image,0,0);
+ const ctx=canvas.getContext('2d');ctx.filter='brightness(1.32) contrast(.86)';ctx.drawImage(image,0,0);
  const softenedTexture=new THREE.CanvasTexture(canvas);softenedTexture.colorSpace=THREE.SRGBColorSpace;
- if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.needsUpdate=true;}
+ if(sunMaterial){sunMaterial.map=softenedTexture;sunMaterial.emissiveMap=softenedTexture;sunMaterial.needsUpdate=true;}
 });sunTexture.colorSpace=THREE.SRGBColorSpace;
-sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,emissive:0xffe0ad,emissiveIntensity:4.2,roughness:1,metalness:0,toneMapped:false});
+sunMaterial=new THREE.MeshStandardMaterial({map:sunTexture,emissiveMap:sunTexture,emissive:0xffe0ad,emissiveIntensity:7.5,roughness:1,metalness:0,toneMapped:false});
 const sunBall=addMesh(new THREE.SphereGeometry(2,64,48),sunMaterial,sunGroup);sunBall.castShadow=false;
-const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',21.2,.86);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
-const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',12.5,.82);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
+const sunGlowOuter=makeSoftGlow('rgba(255,176,96,COLOR)',25.5,1.0);sunGlowOuter.position.set(0,0,0);sunGlowOuter.renderOrder=2;sunGroup.add(sunGlowOuter);
+const sunGlowInner=makeSoftGlow('rgba(255,235,185,COLOR)',15.5,.98);sunGlowInner.position.set(0,0,0);sunGlowInner.renderOrder=3;sunGroup.add(sunGlowInner);
 sunGroup.position.set(19.5,4.25,60);sunGroup.scale.setScalar(2);
 
 function makeRocket(color){
@@ -296,7 +303,7 @@ function placeRockets(){
 placeRockets();
 function updateRocketPositions(){placeRockets()}
 const moonOrbitRadius=moon.position.distanceTo(earthGroup.position);
-const orbitDots=addMesh(new THREE.TorusGeometry(moonOrbitRadius,.025,6,240),new THREE.MeshBasicMaterial({color:0x435176,transparent:true,opacity:.6}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.copy(earthGroup.position);orbitDots.castShadow=false;orbitDots.receiveShadow=false;
+const orbitDots=addMesh(new THREE.TorusGeometry(moonOrbitRadius,.025,6,240),new THREE.MeshBasicMaterial({color:0x7c8bb5,transparent:true,opacity:.78,toneMapped:false,depthWrite:false}),scene);orbitDots.rotation.x=Math.PI/2;orbitDots.position.copy(earthGroup.position);orbitDots.castShadow=false;orbitDots.receiveShadow=false;
 function resize(){const w=sceneRoot.clientWidth,h=sceneRoot.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);composer.setSize(w,h)}
 new ResizeObserver(resize).observe(sceneRoot);resize();
 const moonWorldPosition=new THREE.Vector3();
@@ -341,7 +348,7 @@ document.querySelector('#view-earth').addEventListener('click',()=>{
  const earthLocal=moon.worldToLocal(earthWorldPosition.clone());
  const towardMoon=earthLocal.clone().negate().normalize();
  // Place the camera just above Earth's near-side horizon, looking outward toward the full Moon.
- const earthViewPosition=earthLocal.clone().addScaledVector(towardMoon,3.35).add(new THREE.Vector3(0,.25,0));
+ const earthViewPosition=earthLocal.clone().addScaledVector(towardMoon,7.0).add(new THREE.Vector3(0,5.5,0));
  transitionCamera(earthViewPosition,1400);
 });
 function renderHud(){
