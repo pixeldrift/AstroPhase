@@ -257,7 +257,7 @@ const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissive:new THREE.
 moonMat.onBeforeCompile=shader=>{
  shader.fragmentShader=shader.fragmentShader.replace(
   '#include <lights_fragment_end>',
-  '#include <lights_fragment_end>\\nreflectedLight.indirectDiffuse=vec3(0.0);'
+  '#include <lights_fragment_end>\nreflectedLight.indirectDiffuse=vec3(0.0);'
  );
 };
 moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
@@ -266,7 +266,7 @@ const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4
 // Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
 // With the Moon at +X, a half-turn brings the texture's +X face toward Earth (-X).
 moon.add(board);board.position.set(0,-4.25,0);board.rotation.y=Math.PI;
-moon.layers.set(1);camera.layers.enable(1);
+moon.layers.set(1);camera.layers.enable(1);camera.layers.enable(2);
 moon.rotation.y=Math.PI;moon.add(camera);camera.position.set(64,38,19.5);controls.target.set(0,0,0);sunLight.target.position.set(0,4.25,0);
 sunLight.intensity=4.6;
 
@@ -317,7 +317,7 @@ sunGroup.position.set(19.5,4.25,60);sunGroup.scale.setScalar(2);
 
 // Fixed visual baseline: full sun brightness and sun-only bloom.
 sunLight.intensity=7;
-sunMaterial.emissiveIntensity=18*(7/3.4);
+sunMaterial.emissiveIntensity=18;
 
 function makeRocket(color){
  const g=new THREE.Group(),bodyMat=new THREE.MeshStandardMaterial({color,metalness:.42,roughness:.3});
