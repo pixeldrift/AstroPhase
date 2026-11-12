@@ -263,6 +263,8 @@ moonMat.onBeforeCompile=shader=>{
 };
 moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=true;moon.receiveShadow=true;
+// Keep the fill source independent of the Moon, but in the same orbital frame so it follows the Moon around Earth.
+earthMoonOrbit.add(fillLight);fillLight.position.copy(moon.position).add(new THREE.Vector3(12,9,12));
 // The board is fixed to the Moon; its quarter-token axis is aligned with the lunar terminator at the initial Sun direction.
 // Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
 // With the Moon at +X, a half-turn brings the texture's +X face toward Earth (-X).
