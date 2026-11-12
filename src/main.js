@@ -59,7 +59,7 @@ sunLight.shadow.camera.left=-28;sunLight.shadow.camera.right=28;sunLight.shadow.
 sunLight.shadow.camera.near=.1;sunLight.shadow.camera.far=120;sunLight.shadow.camera.updateProjectionMatrix();
 sunLight.shadow.bias=-.00012;sunLight.shadow.normalBias=.025;sunLight.shadow.radius=5;sunLight.shadow.autoUpdate=true;
 scene.add(sunLight);scene.add(sunLight.target);
-const fillLight=new THREE.PointLight(0x9aafe8,1100,36,2);fillLight.layers.enable(1);scene.add(fillLight);
+const fillLight=new THREE.PointLight(0x718ac2,900,0,2);fillLight.layers.enable(0);fillLight.layers.enable(1);scene.add(fillLight);
 
 // Star field is supplied as an equirectangular background texture.
 
@@ -263,9 +263,8 @@ moonMat.onBeforeCompile=shader=>{
 };
 moonMat.customProgramCacheKey=()=>'moon-direct-sunlight-only-v1';
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=true;moon.receiveShadow=true;
-// Keep the fill source independent of the Moon, but in the same orbital frame so it follows the Moon around Earth.
-// Keep the blue fill close to the lunar surface so inverse-square falloff does not make it negligible.
-earthMoonOrbit.add(fillLight);fillLight.position.copy(moon.position).add(new THREE.Vector3(8,6,8));
+// Place the broad fill at Earth's position, at the center of the Moon's orbit, so illumination stays consistent as the Moon moves.
+fillLight.position.set(0,4.25,0);
 // The board is fixed to the Moon; its quarter-token axis is aligned with the lunar terminator at the initial Sun direction.
 // Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
 // With the Moon at +X, a half-turn brings the texture's +X face toward Earth (-X).
