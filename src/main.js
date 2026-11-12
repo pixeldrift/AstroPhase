@@ -86,8 +86,15 @@ function makeLabel(text,color='#dce4ff',size=72){
 const earthMoonOrbit=new THREE.Group();scene.add(earthMoonOrbit);
 const board=new THREE.Group();
 const baseMat=new THREE.MeshStandardMaterial({color:0x2b3858,metalness:.48,roughness:.44});
-const base=addMesh(new THREE.CylinderGeometry(13.2,13.5,.8,128),baseMat,board);base.position.y=-.45;
-const top=addMesh(new THREE.CylinderGeometry(12.95,13.05,.16,128),new THREE.MeshStandardMaterial({color:0x1d2945,metalness:.25,roughness:.68}),board);top.position.y=.02;
+function makeAnnularDeck(inner,outer,depth){
+ const shape=new THREE.Shape();shape.absarc(0,0,outer,0,Math.PI*2,false);
+ const hole=new THREE.Path();hole.absarc(0,0,inner,0,Math.PI*2,true);shape.holes.push(hole);
+ const geometry=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,curveSegments:128});
+ geometry.rotateX(-Math.PI/2);return geometry;
+}
+// The structural decks share the same open center as the raised phase rings.
+const base=addMesh(makeAnnularDeck(5.18,13.35,.8),baseMat,board);base.position.y=-.45;
+const top=addMesh(makeAnnularDeck(5.18,13.0,.16),new THREE.MeshStandardMaterial({color:0x1d2945,metalness:.25,roughness:.68}),board);top.position.y=.02;
 function makeTier(inner,outer,depth,y,color){
  const shape=new THREE.Shape();shape.absarc(0,0,outer,0,Math.PI*2,false);
  const hole=new THREE.Path();hole.absarc(0,0,inner,0,Math.PI*2,true);shape.holes.push(hole);
@@ -100,7 +107,7 @@ function makeTier(inner,outer,depth,y,color){
 makeTier(8.65,12.9,.28,.1,0x354766);
 makeTier(5.18,8.48,.2,.1,0x303c5b);
 function torus(radius,tube,color,y){const m=addMesh(new THREE.TorusGeometry(radius,tube,10,160),new THREE.MeshStandardMaterial({color,metalness:.75,roughness:.32,emissive:color,emissiveIntensity:.13}),board);m.rotation.x=Math.PI/2;m.position.y=y;return m}
-torus(12.75,.075,0x6678a5,.4);torus(8.35,.09,0x7884b8,.32);torus(5.05,.055,0x7565b8,.37);
+torus(12.75,.075,0x6678a5,.4);torus(8.35,.09,0x7884b8,.32);torus(5.23,.055,0x7565b8,.37);
 const tileMaterials=[0x465a7d,0x50658b,0x465a7d,0x50658b];
 const trackTiles=[];
 const sectorAngle=Math.PI/4,phaseGap=sectorAngle*.06,innerGap=sectorAngle*.025;
@@ -178,7 +185,7 @@ for(let i=0;i<8;i++){
  const label=makeFlatText(PHASES[i].toUpperCase(),'#ffffff');label.rotation.x=-Math.PI/2;label.position.set(0,.415,1.25);label.traverse(o=>{o.castShadow=false;o.receiveShadow=false});tokenGroup.add(label);
  tokenGroup.position.set(Math.cos(a)*6.15,.29,Math.sin(a)*6.15);
 }
-const centerRing=addMesh(new THREE.CylinderGeometry(5.15,5.15,.18,96),new THREE.MeshStandardMaterial({color:0x171f39,metalness:.5,roughness:.42}),board);centerRing.position.y=.25;
+// The center remains open beneath the Moon; no insert or floor closes the aperture.
 
  // Earth sits at the center of the Moon's orbital path, using the supplied map set.
  const earthGroup=new THREE.Group();earthGroup.position.set(0,4.25,0);scene.add(earthGroup);
