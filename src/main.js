@@ -59,7 +59,12 @@ sunLight.shadow.camera.left=-28;sunLight.shadow.camera.right=28;sunLight.shadow.
 sunLight.shadow.camera.near=.1;sunLight.shadow.camera.far=120;sunLight.shadow.camera.updateProjectionMatrix();
 sunLight.shadow.bias=-.00012;sunLight.shadow.normalBias=.025;sunLight.shadow.radius=5;sunLight.shadow.autoUpdate=true;
 scene.add(sunLight);scene.add(sunLight.target);
-const fillLight=new THREE.PointLight(0x718ac2,160,60);fillLight.position.set(12,9,12);fillLight.layers.enable(1);scene.add(fillLight);
+// Broad orbital fill: place the point source at Earth's position so the Moon stays
+// consistently filled throughout its orbit. Distance 0 removes the old 60-unit cutoff.
+const fillLight=new THREE.PointLight(0x718ac2,900,0,2);
+fillLight.position.set(0,4.25,0);
+fillLight.layers.enable(1);
+scene.add(fillLight);
 
 // Star field is supplied as an equirectangular background texture.
 
