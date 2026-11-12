@@ -223,7 +223,7 @@ for(let i=0;i<8;i++){
   };
   material.customProgramCacheKey=()=> 'view-fresnel-'+centerVisibility+'-'+power;
  }
- const earthCloudMaterial=new THREE.MeshBasicMaterial({color:0xffffff,map:earthCloudTexture,alphaMap:earthCloudAlphaTexture,transparent:true,opacity:.9,depthWrite:false,depthTest:true,side:THREE.FrontSide});
+ const earthCloudMaterial=new THREE.MeshBasicMaterial({color:0xffffff,map:earthCloudTexture,alphaMap:earthCloudAlphaTexture,transparent:false,opacity:.9,depthWrite:false,depthTest:true,side:THREE.FrontSide});
  applyViewFresnel(earthCloudMaterial,.72,1.8);
  const earthClouds=new THREE.Mesh(new THREE.SphereGeometry(3.405,128,96),earthCloudMaterial);earthClouds.renderOrder=2;earthGroup.add(earthClouds);earthClouds.layers.set(1);
  const atmosphereMaterial=new THREE.MeshBasicMaterial({color:0x65baff,transparent:true,opacity:.52,side:THREE.BackSide,depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:false});
