@@ -27,9 +27,18 @@
               <input id="sun-brightness" class="lighting-range sun-range" type="range" min="0" max="7" step="0.05" value="7" aria-label="Sun brightness">
             </div>
             <div class="lighting-control">
-              <label for="moon-ambient">MOON AMBIENT</label>
-              <output id="moon-ambient-value" for="moon-ambient">0.008</output>
-              <input id="moon-ambient" class="lighting-range moon-range" type="range" min="0" max="0.30" step="0.005" value="0.008" aria-label="Moon ambient lighting">
+              <label for="moon-emissive">MOON EMISSIVE</label>
+              <output id="moon-emissive-value" for="moon-emissive">0.008</output>
+              <input id="moon-emissive" class="lighting-range moon-range" type="range" min="0" max="0.15" step="0.001" value="0.008" aria-label="Moon emissive intensity">
+            </div>
+            <label class="glow-toggle" for="moon-glow">
+              <input id="moon-glow" type="checkbox" checked>
+              <span>MOON GLOW</span>
+            </label>
+            <div class="lighting-control">
+              <label for="bloom-strength">BLOOM</label>
+              <output id="bloom-strength-value" for="bloom-strength">0.36</output>
+              <input id="bloom-strength" class="lighting-range bloom-range" type="range" min="0" max="1.2" step="0.01" value="0.36" aria-label="Bloom strength">
             </div>
           </div>
           <div class="board-controls">

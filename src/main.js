@@ -243,7 +243,7 @@ torus(5.05,.07,0x9b8ed5,.37);
 const textureLoader=new THREE.TextureLoader();
 const moonAlbedo=textureLoader.load('/textures/moon-albedo.jpg');moonAlbedo.colorSpace=THREE.SRGBColorSpace;
 const moonGeometry=new THREE.SphereGeometry(2.7,256,192);
-const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissiveMap:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.985,metalness:0});
+const moonMat=new THREE.MeshStandardMaterial({map:moonAlbedo,emissive:new THREE.Color(0x343b50),emissiveIntensity:.008,roughness:.985,metalness:0});
 const moon=addMesh(moonGeometry,moonMat,earthMoonOrbit);moon.position.set(19.5,4.25,0);moon.castShadow=true;moon.receiveShadow=true;
 // The board is fixed to the Moon; its quarter-token axis is aligned with the lunar terminator at the initial Sun direction.
 // Keep the texture's lunar near-side meridian facing Earth (+world X is away from Earth).
@@ -299,8 +299,11 @@ sunGroup.position.set(19.5,4.25,60);sunGroup.scale.setScalar(2);
 // Live lighting controls for visual tuning.
 const sunBrightnessControl=document.querySelector('#sun-brightness');
 const sunBrightnessValue=document.querySelector('#sun-brightness-value');
-const moonAmbientControl=document.querySelector('#moon-ambient');
-const moonAmbientValue=document.querySelector('#moon-ambient-value');
+const moonEmissiveControl=document.querySelector('#moon-emissive');
+const moonEmissiveValue=document.querySelector('#moon-emissive-value');
+const moonGlowControl=document.querySelector('#moon-glow');
+const bloomStrengthControl=document.querySelector('#bloom-strength');
+const bloomStrengthValue=document.querySelector('#bloom-strength-value');
 const initialSunBrightness=7;
 function setSunBrightness(value){
  const brightness=Number(value);
@@ -311,16 +314,28 @@ function setSunBrightness(value){
  sunGlowInner.material.opacity=ratio;
  sunBrightnessValue.textContent=brightness.toFixed(2);
 }
-function setMoonAmbient(value){
+function setMoonEmissive(value){
  const intensity=Number(value);
- moonAmbient.intensity=intensity;
  moonMat.emissiveIntensity=intensity;
- moonAmbientValue.textContent=intensity.toFixed(3);
+ moonEmissiveValue.textContent=intensity.toFixed(3);
+}
+function setMoonGlow(enabled){
+ moonGlowOuter.visible=enabled;
+ moonGlowInner.visible=enabled;
+}
+function setBloomStrength(value){
+ const strength=Number(value);
+ bloomPass.strength=strength;
+ bloomStrengthValue.textContent=strength.toFixed(2);
 }
 sunBrightnessControl.addEventListener('input',event=>setSunBrightness(event.target.value));
-moonAmbientControl.addEventListener('input',event=>setMoonAmbient(event.target.value));
+moonEmissiveControl.addEventListener('input',event=>setMoonEmissive(event.target.value));
+moonGlowControl.addEventListener('change',event=>setMoonGlow(event.target.checked));
+bloomStrengthControl.addEventListener('input',event=>setBloomStrength(event.target.value));
 setSunBrightness(sunBrightnessControl.value);
-setMoonAmbient(moonAmbientControl.value);
+setMoonEmissive(moonEmissiveControl.value);
+setMoonGlow(moonGlowControl.checked);
+setBloomStrength(bloomStrengthControl.value);
 
 
 function makeRocket(color){
