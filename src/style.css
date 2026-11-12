@@ -12,3 +12,31 @@
 #scene canvas{touch-action:none}
 .board-controls{left:24px;right:auto;bottom:24px;transform:none;gap:6px}
 .stage-caption{left:24px;right:24px;justify-content:flex-end}
+
+
+/* Compact live lighting tuner over the right edge of the 3D stage. */
+.lighting-panel{
+ position:absolute;z-index:2;right:18px;top:50%;transform:translateY(-50%);
+ display:flex;flex-direction:column;align-items:center;gap:17px;
+ width:104px;padding:13px 9px 15px;
+ border:1px solid rgba(177,192,231,.2);border-radius:12px;
+ background:rgba(8,13,28,.78);backdrop-filter:blur(12px);
+ box-shadow:0 8px 28px rgba(0,0,0,.24);
+}
+.lighting-panel-title{font-size:8px;letter-spacing:1.7px;font-weight:700;color:#aab5d0}
+.lighting-control{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%}
+.lighting-control label{font-size:7px;letter-spacing:.8px;font-weight:700;color:#b8c1d7;white-space:nowrap}
+.lighting-control output{font:600 12px "Space Grotesk",sans-serif;color:#f3e2b7;font-variant-numeric:tabular-nums}
+.lighting-range{
+ width:142px;height:18px;margin:58px 0;
+ writing-mode:vertical-lr;direction:rtl;
+ appearance:slider-vertical;-webkit-appearance:slider-vertical;
+ accent-color:#e8bd72;cursor:pointer;touch-action:pan-y;
+}
+.moon-range{accent-color:#a99aff}
+.lighting-range:focus-visible{outline:2px solid #d7c8ff;outline-offset:5px;border-radius:8px}
+@media(max-width:560px){
+ .lighting-panel{right:9px;width:91px;padding:10px 6px 12px;gap:12px}
+ .lighting-range{height:18px;width:120px;margin:48px 0}
+ .lighting-control label{font-size:6px}
+}
